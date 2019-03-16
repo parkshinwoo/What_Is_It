@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+            app:showAsAction="always"
+            android:id="@+id/action_recognize_image"
+            android:enabled="true"
+            android:icon="@drawable/ic_image"
+            android:title="@string/image"
+    ></item>
+
+    <item
+            app:showAsAction="always"
+            android:id="@+id/action_recognize_landmark"
+            android:enabled="true"
+            android:icon="@drawable/ic_landmark"
+            android:title="@string/landmark"
+    ></item>
+
+    <item
+            app:showAsAction="always"
+            android:id="@+id/action_recognize_face"
+            android:enabled="true"
+            android:icon="@drawable/ic_face"
+            android:title="@string/face"
+    ></item>
+
+</menu>

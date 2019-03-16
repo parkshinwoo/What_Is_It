@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">What_Is_It?</string>
+
+    <!-- Sign In -->
+    <string name="email">이메일</string>
+    <string name="password">비밀번호</string>
+    <string name="signin_email">로그인 또는 계정 생성 및 로그인</string>
+    <string name="signin_google">Google 계정으로 로그인</string>
+    <string name="signup_complete">회원가입 성공</string>
+    <string name="signin_complete">로그인 성공</string>
+    <string name="signout">쉴래, 로그아웃!</string>
+    <string name="signout_success">로그아웃 성공</string>
+    <string name="signout_fail">로그아웃 실패</string>
+    <string name="signout_fail_null">이메일과 비밀번호를 입력해주세요</string>
+
+    <!-- Bottom Navigation View -->
+    <string name="home">Home</string>
+    <string name="language">언어 식별</string>
+    <string name="face">얼굴 인식</string>
+    <string name="teacher">선생님</string>
+    <string name="text">텍스트 추출</string>
+    <string name="image">이미지 분석</string>
+    <string name="landmark">랜드마크 인식</string>
+
+    <!-- Toolbar -->
+    <string name="back">Back</string>
+    <string name="no_image">no_image</string>
+
+    <!-- etc -->
+    <item name="visible" type="id"/>
+    <item name="masked" type="id"/>
+</resources>
+
+
+
+
+
