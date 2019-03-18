@@ -1,14 +1,22 @@
 package e.pshkh.what_is_it
 
 import android.Manifest
+import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.BottomNavigationView.OnNavigationItemSelectedListener
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
+import e.pshkh.what_is_it.navigation_activity.TeacherActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
+
+    // 맨 상단에 위치하는게 툴바입니다.
+    // 툴바의 기본 디자인을 지정하는 코드입니다.
+    fun setToolbarDefault(){
+
+    }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
 
@@ -17,8 +25,8 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
         // 하단 네비게이션 바에 여러 아이템들이 있습니다.
         // 사용자가 네비게이션 바의 특정 아이템을 선택하면 해당하는 화면으로 이동시켜주는 기능입니다.
 
-        /*
         when (item.itemId) {
+            /*
             R.id.action_home -> {
 
                 /*
@@ -69,7 +77,7 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
 
                 return true
             }
-
+            */
 
             R.id.action_teacher -> {
 
@@ -78,15 +86,11 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
                 return true
             }
 
-        */
+        }
         return false
     }
 
-    // 맨 상단에 위치하는게 툴바입니다.
-    // 툴바의 기본 디자인을 지정하는 코드입니다.
-    fun setToolbarDefault(){
 
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

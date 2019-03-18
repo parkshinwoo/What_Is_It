@@ -14,13 +14,18 @@
     <string name="signout_fail_null">이메일과 비밀번호를 입력해주세요</string>
 
     <!-- Bottom Navigation View -->
-    <string name="home">Home</string>
+    <string name="diary">다이어리</string>
     <string name="language">언어 식별</string>
     <string name="face">얼굴 인식</string>
     <string name="teacher">선생님</string>
     <string name="text">텍스트 추출</string>
     <string name="image">이미지 분석</string>
     <string name="landmark">랜드마크 인식</string>
+
+    <!-- Teacher -->
+    <string name="hint_teacher">선생님께 물어보세요!</string>
+    <string name="chat">알려주세요!</string>
+    <string name="chat_bubble">말풍선</string>
 
     <!-- Toolbar -->
     <string name="back">Back</string>

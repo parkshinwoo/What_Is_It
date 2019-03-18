@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -19,11 +18,6 @@ class LoginActivity : AppCompatActivity() {
 
     var firestore : FirebaseFirestore? = null
 
-    // 구글 로그인 계정을 위한 변수
-    var googleSignInClient : GoogleSignInClient? = null
-
-    var GOOGLE_LOGIN_CODE = 9002
-
     // onCreate는 앱의 화면이 처음으로 생성됬을때 호출 되는 부분입니다. 즉 앱의 특정 화면이 처음 켜질때 호출이 됩니다.
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,22 +30,6 @@ class LoginActivity : AppCompatActivity() {
         email_login_button.setOnClickListener {
             createAndLoginEmail()
         }
-
-        /*
-        // 구글 계정으로 로그인 버튼에 이벤트를 다는겁니다.
-        google_sign_in_button.setOnClickListener {
-            googleLogin()
-        }
-
-        // 구글 로그인 옵션 설정
-        var gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id))
-            .requestEmail()
-            .build()
-
-        googleSignInClient = GoogleSignIn.getClient(this,gso)
-        */
-
     }
 
     // 이메일 계정 생성
@@ -117,63 +95,12 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    /*
-    // 구글 로그인
-    fun googleLogin(){
-        var signInIntent = googleSignInClient?.signInIntent
-        startActivityForResult(signInIntent,GOOGLE_LOGIN_CODE)
-    }
-
-    // 파이어베이스 구글 계정 인증을 처리하는 부분입니다.
-    fun firebaseAuthWithGoogle(account: GoogleSignInAccount){
-        var credential = GoogleAuthProvider.getCredential(account.idToken, null)
-        auth?.signInWithCredential(credential)?.addOnCompleteListener { task ->
-            if(task.isSuccessful){
-
-                /*
-                    계정을 생성할때 새롭게 생성된 사용자의 uid, 이메일 아이디를 데이터베이스에 저장합니다.
-
-                */
-                var userDTO = UserDTO()
-
-                userDTO.uid = auth?.currentUser?.uid
-                userDTO.userEmail = auth?.currentUser?.email
-
-                firestore?.collection("users")?.document(userDTO.userEmail!!)?.set(userDTO)
-
-                System.out.println("구글 로그인 2단계")
-
-                moveMainPage(auth?.currentUser)
-            }
-        }
-
-    }
-    */
-
     // onResume는 앱의 화면이 잠시 백그라운드로 가있다가 다시 켜지면 실행되는 곳입니다.
     // 앱을 사용하다가 홈버튼을 눌러서 밖으로 나갔다가 다시 들어올때 실행되는 곳이에요
     override fun onResume() {
         super.onResume()
         moveMainPage(auth?.currentUser) // 자동 로그인
     }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        /*
-        if(requestCode == GOOGLE_LOGIN_CODE){
-            var result = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
-            if(result.isSuccess){
-                System.out.println("구글 로그인 1단계")
-                var account = result.signInAccount
-                System.out.println(account)
-                firebaseAuthWithGoogle(account!!)
-            }
-        }
-        */
-    }
-
-
 }
 
 

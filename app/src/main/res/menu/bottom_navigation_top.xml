@@ -4,8 +4,8 @@
             app:showAsAction="always"
             android:id="@+id/action_home"
             android:enabled="true"
-            android:icon="@drawable/ic_home"
-            android:title="@string/home"
+            android:icon="@drawable/ic_diary"
+            android:title="@string/diary"
     ></item>
 
     <item

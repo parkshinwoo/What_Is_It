@@ -34,10 +34,17 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     implementation 'com.google.firebase:firebase-auth:12.0.1'
-    implementation 'com.google.android.gms:play-services-auth:12.0.1'
     implementation 'com.google.firebase:firebase-firestore:12.0.1'
     implementation 'com.google.firebase:firebase-storage:12.0.1'
     implementation 'com.android.support:design:28.0.0'
     implementation 'com.android.support:recyclerview-v7:28.0.0'
+
+    // 다이얼로그 플로우
+    implementation 'ai.api:libai:1.6.12'
+
+    // Json 파싱을 위함
+    implementation 'com.google.code.gson:gson:2.8.5'
+    // API 서버에 요청
+    implementation 'com.squareup.okhttp3:okhttp:3.11.0'
 
 }
