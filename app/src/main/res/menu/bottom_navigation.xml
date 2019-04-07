@@ -3,26 +3,26 @@
 
     <item
             app:showAsAction="always"
-            android:id="@+id/action_recognize_image"
+            android:id="@+id/action_diary"
             android:enabled="true"
-            android:icon="@drawable/ic_image"
-            android:title="@string/image"
+            android:icon="@drawable/ic_diary"
+            android:title="@string/diary"
     ></item>
 
     <item
             app:showAsAction="always"
-            android:id="@+id/action_recognize_landmark"
+            android:id="@+id/action_teacher"
             android:enabled="true"
-            android:icon="@drawable/ic_landmark"
-            android:title="@string/landmark"
+            android:icon="@drawable/ic_teacher"
+            android:title="@string/teacher"
     ></item>
 
     <item
             app:showAsAction="always"
-            android:id="@+id/action_recognize_face"
+            android:id="@+id/action_recognize_emotion"
             android:enabled="true"
             android:icon="@drawable/ic_face"
-            android:title="@string/face"
+            android:title="@string/emotion"
     ></item>
 
 </menu>

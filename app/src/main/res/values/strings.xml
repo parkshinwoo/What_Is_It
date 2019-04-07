@@ -15,12 +15,9 @@
 
     <!-- Bottom Navigation View -->
     <string name="diary">다이어리</string>
-    <string name="language">언어 식별</string>
-    <string name="face">얼굴 인식</string>
+    <string name="emotion">오늘 내 기분은?</string>
     <string name="teacher">선생님</string>
-    <string name="text">텍스트 추출</string>
-    <string name="image">이미지 분석</string>
-    <string name="landmark">랜드마크 인식</string>
+
 
     <!-- Teacher -->
     <string name="hint_teacher">선생님께 물어보세요!</string>
