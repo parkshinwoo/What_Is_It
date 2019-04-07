@@ -9,7 +9,7 @@ android {
     compileSdkVersion 27
     defaultConfig {
         applicationId "e.pshkh.what_is_it"
-        minSdkVersion 21
+        minSdkVersion 26
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"
@@ -38,6 +38,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth:12.0.1'
     implementation 'com.google.firebase:firebase-firestore:12.0.1'
     implementation 'com.google.firebase:firebase-storage:12.0.1'
+
     implementation 'com.android.support:design:27.1.1'
     implementation 'com.android.support:recyclerview-v7:27.1.1'
 

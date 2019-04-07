@@ -7,6 +7,8 @@ import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import e.pshkh.what_is_it.data_transfer_object.DiaryBookDTO
+import e.pshkh.what_is_it.data_transfer_object.StudyRoomDTO
 import e.pshkh.what_is_it.data_transfer_object.UserDTO
 import kotlinx.android.synthetic.main.activity_login.*
 
@@ -51,13 +53,33 @@ class LoginActivity : AppCompatActivity() {
                     if(auth?.currentUser?.uid.isNullOrBlank() || auth?.currentUser?.email.isNullOrBlank()){
                         Toast.makeText(this, "유효한 이메일 계정과 비밀번호를 입력해주세요!", Toast.LENGTH_LONG)
                     }else{
+
+                        val timestamp = System.currentTimeMillis()
+
+                        // 사용자 계정 DB 생성
                         var userDTO = UserDTO()
 
                         userDTO.uid = auth?.currentUser?.uid
                         userDTO.userEmail = auth?.currentUser?.email
-                        userDTO.timestamp = System.currentTimeMillis()
+                        userDTO.timestamp = timestamp
 
-                        firestore?.collection("users")?.document(userDTO.userEmail!!)?.set(userDTO)
+                        firestore?.collection("users")?.document(userDTO.uid!!)?.set(userDTO)
+
+                        // 사용자 공부방 DB 생성
+                        var studyRoomDTO = StudyRoomDTO()
+
+                        studyRoomDTO.study_room_id = auth?.currentUser?.uid
+                        studyRoomDTO.timestamp = timestamp
+
+                        firestore?.collection("StudyRoom")?.document(userDTO.uid!!)?.set(studyRoomDTO)
+
+                        // 사용자 다이어리 DB 생성
+                        var diaryBookDTO = DiaryBookDTO()
+
+                        diaryBookDTO.diary_book_id = auth?.currentUser?.uid
+                        diaryBookDTO.timestamp = timestamp
+
+                        firestore?.collection("DiaryBook")?.document(userDTO.uid!!)?.set(diaryBookDTO)
 
                         moveMainPage(auth?.currentUser)
                     }

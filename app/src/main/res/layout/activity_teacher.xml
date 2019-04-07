@@ -39,6 +39,17 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
+    <android.support.v7.widget.AppCompatImageView
+            android:id="@+id/chatImage"
+            android:src="@drawable/ic_image"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginBottom="20dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/chatText"
+            app:layout_constraintStart_toStartOf="parent"
+    />
+
     <EditText
             android:id="@+id/chatText"
             android:layout_width="0dp"
