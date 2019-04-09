@@ -11,18 +11,23 @@ import android.os.AsyncTask
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.text.TextUtils
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import e.pshkh.what_is_it.R
+import e.pshkh.what_is_it.data_transfer_object.DiaryBookDTO
 import e.pshkh.what_is_it.data_transfer_object.StudyRoomDTO
 import e.pshkh.what_is_it.data_transfer_object.WeatherDTO
 import e.pshkh.what_is_it.util.MessageDTO
-import e.pshkh.what_is_it.util.TeacherRecyclerViewAdapter
 import kotlinx.android.synthetic.main.activity_teacher.*
+import kotlinx.android.synthetic.main.recyclerview_item_design_teacher.view.*
 import okhttp3.*
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -42,7 +47,7 @@ class TeacherActivity : AppCompatActivity() {
     var dateFormatFromHumanText = SimpleDateFormat("yyyy-MM-dd")
 
     // 날씨 API(OpenWeatherMap API)에게 넘겨주기 위한 날짜 형식
-    var weatherDataFormatFromHumanText = SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
+    var weatherDataFormatFromHumanText = SimpleDateFormat("yyyy-MM-dd")
 
     // 날씨 API에게 넘겨받은 날짜를 사람이 이해하기 쉬운 형식으로 바꾸기
     var weatherDataFormatToHumanText = SimpleDateFormat("MM월 dd일 hh시")
@@ -69,6 +74,8 @@ class TeacherActivity : AppCompatActivity() {
     var firestore: FirebaseFirestore? = null
 
     var teacherSnapshot : ListenerRegistration? = null
+    var chatSnapshot : ListenerRegistration? = null
+    var diarySnapshot : ListenerRegistration? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,17 +98,11 @@ class TeacherActivity : AppCompatActivity() {
 
                 question = chatText.text.toString()
 
-                // 챗봇에게 보낼 말을 입력하는 창이 빈 문자열이 아닐 경우에 메세지를 보낼 수 있게 해줍니다.
+                // messageDTOs는 향후 다이어리 스크랩 기능에 사용될 정보를 담음
                 messageDTOs.add(MessageDTO(true, question, null, null, null, null))
 
-                // 내가 전송한 메세지가 recyclerview 화면에 뿌려지게끔 새로고침 합니다.
-                recyclerview.adapter?.notifyDataSetChanged()
-
-                // 끝 위치로 이동합니다.
-                recyclerview.smoothScrollToPosition(messageDTOs.size-1)
-
                 // DB에 메세지 올리기
-                val date = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(Date())
+                val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
                 // 현재 시스템 시간
                 val timestamp = System.currentTimeMillis()
 
@@ -127,6 +128,7 @@ class TeacherActivity : AppCompatActivity() {
 
         // 사진으로 질문할 경우 발생하는 이벤트
         chatImage.setOnClickListener {
+
             q_text_flag = false
 
             var photoPickerIntent = Intent(Intent.ACTION_PICK)
@@ -142,13 +144,15 @@ class TeacherActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        recyclerview.adapter = TeacherRecyclerViewAdapter(messageDTOs)
+        recyclerview.adapter = TeacherRecyclerViewAdapter()
         recyclerview.layoutManager = LinearLayoutManager(this)
     }
 
     override fun onStop() {
         super.onStop()
         teacherSnapshot?.remove()
+        chatSnapshot?.remove()
+        diarySnapshot?.remove()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -157,14 +161,8 @@ class TeacherActivity : AppCompatActivity() {
             if(resultCode == Activity.RESULT_OK){
                 photoUri = data?.data
 
-                // 화면에 표시될 메세지에 사진의 Uri를 담습니다.
+                // 다이어리 스크랩 기능에 사용될 정보를 담음
                 messageDTOs.add(MessageDTO(true, null, data, null, null, null)) // intent 타입으로 데이터 넘김
-
-                // 어린이가 올린 사진이 recyclerview 화면에 뿌려지게끔 새로고침 합니다.
-                recyclerview.adapter?.notifyDataSetChanged()
-
-                // 끝 위치로 이동합니다.
-                recyclerview.smoothScrollToPosition(messageDTOs.size-1)
 
                 photoUpload()
             }
@@ -174,11 +172,162 @@ class TeacherActivity : AppCompatActivity() {
         }
     }
 
+    inner class TeacherRecyclerViewAdapter: RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+        val message_list : ArrayList<StudyRoomDTO.Message>
+        init {
+            message_list = ArrayList()
+
+            chatSnapshot = firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").orderBy("timestamp")?.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
+
+                if(querySnapshot == null) return@addSnapshotListener
+
+                message_list.clear()
+
+                for(snapshot in querySnapshot.documents!!){
+                    message_list.add(snapshot.toObject(StudyRoomDTO.Message::class.java))
+                }
+
+                if(message_list.isNotEmpty()){
+                    recyclerview.adapter.notifyDataSetChanged()
+                    recyclerview.layoutManager.scrollToPosition(message_list.size-1)
+                }
+
+            }
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+            var view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_item_design_teacher, parent, false)
+            return CustomViewHolder(view)
+        }
+
+        private inner class CustomViewHolder(view: View?) : RecyclerView.ViewHolder(view)
+
+        override fun getItemCount(): Int {
+            return message_list.size
+        }
+
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+            if (message_list[position].owner_id != "0") {
+
+                if(message_list[position].is_photo == false){
+                    // 내가 챗봇에게 보낸 텍스트 메세지일 경우에는 나의 말풍선만 보이게 하고
+                    // 챗봇의 말풍선은 가려야합니다.
+                    holder.itemView.imagebubble.visibility = View.GONE
+                    holder.itemView.right_chatbubble.visibility = View.VISIBLE
+                    holder.itemView.right_chatbubble.text = message_list[position].message_content.toString()
+                    holder.itemView.left_chatbubble.visibility = View.INVISIBLE
+                } else{
+                    // 내가 챗봇에게 사진을 보냈을 경우
+                    holder.itemView.left_chatbubble.visibility = View.GONE
+                    holder.itemView.right_chatbubble.visibility = View.GONE
+
+                    var photoUri:Uri?
+                    photoUri = message_list[position].message_content as Uri
+                    holder.itemView.imagebubble.visibility = View.VISIBLE
+                    holder.itemView.imagebubble.setImageURI(photoUri)
+                }
+            } else {
+                // 챗봇이 내게 보낸 메세지일 경우
+                holder.itemView.imagebubble.visibility = View.GONE
+                holder.itemView.left_chatbubble.visibility = View.VISIBLE
+                holder.itemView.left_chatbubble.text = message_list[position].message_content.toString()
+                holder.itemView.right_chatbubble.visibility = View.INVISIBLE
+            }
+
+
+            // 다이어리에 올리는 이벤트 발생
+            holder.itemView.left_chatbubble.setOnLongClickListener {
+                if(messageDTOs[position].target1 != null && messageDTOs[position].target2 != null){
+                    diarySnapshot = FirebaseFirestore.getInstance()!!.collection("StudyRoom").document(messageDTOs[position].target1!!).collection("message").document(messageDTOs[position].target2!!).addSnapshotListener { documentSnapshot, firebaseFirestoreException ->
+
+                        if(documentSnapshot == null) return@addSnapshotListener
+
+                        val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
+                        val timestamp = System.currentTimeMillis()
+
+                        var diary_book_id : String?
+                        var diary_id : String?
+
+                        diary_book_id = messageDTOs[position].target1
+                        diary_id = messageDTOs[position].target1 + timestamp.toString()
+
+                        var is_photo:Boolean? = true
+                        if(messageDTOs[position].uri == null){
+                            is_photo = false
+                        }
+
+                        var owner_id = messageDTOs[position].target1
+                        var question:Any? = null
+                        var answer:String? = null
+                        var subject:String? = null
+                        var is_scraped:String? = null
+
+                        for(snapshot in documentSnapshot.data){
+                            if(snapshot.key.equals("question")){
+                                question = snapshot.value
+                            }
+                            if(snapshot.key.equals("message_content")){
+                                answer = snapshot.value.toString()
+                            }
+                            if(snapshot.key.equals("subject")){
+                                subject = snapshot.value.toString()
+                            }
+                            if(snapshot.key.equals("_scraped")){
+                                is_scraped = snapshot.value.toString()
+                            }
+                        }
+
+                        if (is_scraped == "false"){
+
+                            var diary = DiaryBookDTO.Diary()
+
+                            diary.diary_id = diary_id
+                            diary.answer = answer
+                            diary.date = date
+                            diary.question = question
+                            diary.timestamp = timestamp
+                            diary.owner_id = owner_id
+                            diary.is_photo = is_photo
+                            diary.subject = subject
+
+                            FirebaseFirestore.getInstance().collection("users").whereEqualTo("uid", owner_id!!).get().addOnCompleteListener {
+                                if (it.isSuccessful){
+                                    for (document in it.result){
+                                        diary.userEmail = document.data["userEmail"].toString()
+                                    }
+
+                                    FirebaseFirestore.getInstance().collection("DiaryBook").document(diary_book_id!!).collection("diary").document(diary_id).set(diary)
+
+                                    var map = mutableMapOf<String, Any>()
+                                    map["_scraped"] = true
+                                    FirebaseFirestore.getInstance().collection("StudyRoom").document(messageDTOs[position].target1!!).collection("message").document(messageDTOs[position].target2!!).update(map)?.addOnCompleteListener {
+                                            task ->
+                                        if(task.isSuccessful){
+                                            FirebaseFirestore.getInstance().collection("StudyRoom").document(messageDTOs[position].target1!!).collection("message").document(messageDTOs[position].answered_question_id!!).update(map)?.addOnCompleteListener {
+                                                    task ->
+                                                if(task.isSuccessful){
+
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                true
+            }
+        }
+    }
+
+
     // 이미지를 파이어베이스 스토리지 및 스토어에 업로드하는 함수입니다.
     fun photoUpload() {
 
         // 사진이 업로드된 날짜 및 시각을 담는 변수입니다.
-        val date = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(Date())
+        val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
         // 현재 시스템 시간
         val timestamp = System.currentTimeMillis()
         // 사진의 파일 형식은 png로 하며 파일명은 사진이 업로드된 시각으로 합니다.
@@ -217,7 +366,7 @@ class TeacherActivity : AppCompatActivity() {
 
             // 사용자가 전송한 메세지를 다이얼로그 플로우로 넘겨주는 쿼리입니다.
             var aiRequest = AIRequest()
-            aiRequest.setQuery(params[0])
+            aiRequest.setQuery(params[0]) 
 
             // 결과를 리턴합니다.
             return aiDataService?.request(aiRequest)!!.result
@@ -350,7 +499,7 @@ class TeacherActivity : AppCompatActivity() {
 
     fun do_answer(answer : String?, subject : String?){
 
-        val date = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(Date())
+        val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
         val timestamp = System.currentTimeMillis()
         val answer_id = 0.toString() + timestamp.toString()
 
@@ -363,69 +512,68 @@ class TeacherActivity : AppCompatActivity() {
             not_answered_question.clear()
 
             for(snapshot in querySnapshot.documents!!){
-                if(snapshot.toObject(StudyRoomDTO.Message::class.java).is_answered == false){
 
-                    val not_answered_message_id = snapshot.toObject(StudyRoomDTO.Message::class.java).message_id
+                not_answered_question.add(snapshot.toObject(StudyRoomDTO.Message::class.java))
 
-                    var map1 = mutableMapOf<String, Any>()
-                    map1["_answered"] = true
+                for (n_a_q in not_answered_question){
+                    if(n_a_q.is_answered == false){
 
-                    var map2 = mutableMapOf<String, Any>()
-                    map2["answer_id"] = answer_id
+                        val not_answered_message_id = n_a_q.message_id
 
-                    var map3 = mutableMapOf<String, Any>()
-                    map3["subject"] = subject.toString()
+                        var map1 = mutableMapOf<String, Any>()
+                        map1["_answered"] = true
 
-                    firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").document(not_answered_message_id!!).update(map1)?.addOnCompleteListener {
-                        task ->
+                        var map2 = mutableMapOf<String, Any>()
+                        map2["answer_id"] = answer_id
+
+                        var map3 = mutableMapOf<String, Any>()
+                        map3["subject"] = subject.toString()
+
+                        firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").document(not_answered_message_id!!).update(map1)?.addOnCompleteListener {
+                                task ->
                             if(task.isSuccessful){
+                                firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").document(not_answered_message_id!!).update(map2)?.addOnCompleteListener {
+                                        task ->
+                                    if(task.isSuccessful){
+                                        firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").document(not_answered_message_id!!).update(map3)?.addOnCompleteListener {
+                                                task ->
+                                            if(task.isSuccessful){
+                                                // 공부방에 추가할 답변 메세지 생성
+                                                var message = StudyRoomDTO.Message()
 
+                                                message.subject = subject
+                                                message.timestamp = timestamp
+                                                message.date = date
+                                                message.message_content = answer // 선생님의 답변 내용을 담음
+                                                message.is_answered = true
+                                                message.message_id = answer_id
+                                                message.question_id = not_answered_message_id
+                                                message.answer_id = answer_id
+                                                message.owner_id = 0.toString()
+                                                message.is_student = false
+                                                message.question = n_a_q.message_content // for diary 어린이의 질문 내용을 담음
+
+                                                var target_document_layer1 = auth?.currentUser?.uid!!
+                                                var target_document_layer2 = answer_id!!
+
+                                                // 파이어베이스 DB의 공부방 하위에 답변 메세지 저장
+                                                firestore!!.collection("StudyRoom").document(target_document_layer1).collection("message").document(target_document_layer2).set(message)
+
+                                                if(messageDTOs.contains(MessageDTO(false, answer, null, target_document_layer1, target_document_layer2, not_answered_message_id))){
+                                                    // 중복 방지
+                                                }else{
+                                                    messageDTOs.add(MessageDTO(false, answer, null, target_document_layer1, target_document_layer2, not_answered_message_id))
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
-                    }
-
-                    firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").document(not_answered_message_id!!).update(map2)?.addOnCompleteListener {
-                            task ->
-                        if(task.isSuccessful){
-
                         }
-                    }
-
-                    firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").document(not_answered_message_id!!).update(map3)?.addOnCompleteListener {
-                            task ->
-                        if(task.isSuccessful){
-
-                        }
-                    }
-
-                    // 공부방에 추가할 답변 메세지 생성
-                    var message = StudyRoomDTO.Message()
-
-                    message.subject = subject
-                    message.timestamp = timestamp
-                    message.date = date
-                    message.message_content = answer // 선생님의 답변 내용을 담음
-                    message.is_answered = true
-                    message.message_id = answer_id
-                    message.question_id = not_answered_message_id
-                    message.answer_id = answer_id
-                    message.owner_id = 0.toString()
-                    message.is_student = false
-                    message.question = snapshot.toObject(StudyRoomDTO.Message::class.java).message_content // for diary 어린이의 질문 내용을 담음
-
-                    var target_document_layer1 = auth?.currentUser?.uid!!
-                    var target_document_layer2 = answer_id!!
-
-                    // 파이어베이스 DB의 공부방 하위에 답변 메세지 저장
-                    firestore!!.collection("StudyRoom").document(target_document_layer1).collection("message").document(target_document_layer2).set(message)
-
-                    if(messageDTOs.contains(MessageDTO(false, answer, null, target_document_layer1, target_document_layer2, not_answered_message_id))){
-                        // 중복 방지
-                    }else{
-                        messageDTOs.add(MessageDTO(false, answer, null, target_document_layer1, target_document_layer2, not_answered_message_id))
-                        recyclerview.adapter?.notifyDataSetChanged()
-                        recyclerview.smoothScrollToPosition(messageDTOs.size - 1)
                     }
                 }
+
+
             }
 
         }
