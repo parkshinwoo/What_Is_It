@@ -403,6 +403,9 @@ class TeacherActivity : AppCompatActivity() {
                     var target_document_layer1 = auth?.currentUser?.uid!!
                     var target_document_layer2 = answer_id!!
 
+                    // 파이어베이스 DB의 공부방 하위에 답변 메세지 저장
+                    firestore!!.collection("StudyRoom").document(target_document_layer1).collection("message").document(target_document_layer2).set(message)
+
                     if(messageDTOs.contains(MessageDTO(false, answer, null, target_document_layer1, target_document_layer2))){
                         // 중복 방지
                     }else{
@@ -410,9 +413,6 @@ class TeacherActivity : AppCompatActivity() {
                         recyclerview.adapter?.notifyDataSetChanged()
                         recyclerview.smoothScrollToPosition(messageDTOs.size - 1)
                     }
-
-                    // 파이어베이스 DB의 공부방 하위에 답변 메세지 저장
-                    firestore!!.collection("StudyRoom").document(target_document_layer1).collection("message").document(target_document_layer2).set(message)
                 }
             }
 
