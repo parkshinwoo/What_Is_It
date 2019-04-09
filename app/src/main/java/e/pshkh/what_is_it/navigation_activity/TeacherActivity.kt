@@ -92,7 +92,7 @@ class TeacherActivity : AppCompatActivity() {
                 question = chatText.text.toString()
 
                 // 챗봇에게 보낼 말을 입력하는 창이 빈 문자열이 아닐 경우에 메세지를 보낼 수 있게 해줍니다.
-                messageDTOs.add(MessageDTO(true, question, null, null, null))
+                messageDTOs.add(MessageDTO(true, question, null, null, null, null))
 
                 // 내가 전송한 메세지가 recyclerview 화면에 뿌려지게끔 새로고침 합니다.
                 recyclerview.adapter?.notifyDataSetChanged()
@@ -113,6 +113,7 @@ class TeacherActivity : AppCompatActivity() {
                 message.message_id = auth?.currentUser?.uid.toString() + timestamp.toString()
                 message.question_id = auth?.currentUser?.uid.toString() + timestamp.toString()
                 message.owner_id = auth?.currentUser?.uid.toString()
+                message.question = question
 
                 // 파이어베이스 DB의 공부방 하위에 메세지 저장
                 firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").document(message.message_id!!).set(message)
@@ -157,7 +158,7 @@ class TeacherActivity : AppCompatActivity() {
                 photoUri = data?.data
 
                 // 화면에 표시될 메세지에 사진의 Uri를 담습니다.
-                messageDTOs.add(MessageDTO(true, null, data, null, null)) // intent 타입으로 데이터 넘김
+                messageDTOs.add(MessageDTO(true, null, data, null, null, null)) // intent 타입으로 데이터 넘김
 
                 // 어린이가 올린 사진이 recyclerview 화면에 뿌려지게끔 새로고침 합니다.
                 recyclerview.adapter?.notifyDataSetChanged()
@@ -200,6 +201,7 @@ class TeacherActivity : AppCompatActivity() {
             message.message_id = auth?.currentUser?.uid.toString() + timestamp.toString()
             message.question_id = auth?.currentUser?.uid.toString() + timestamp.toString()
             message.owner_id = auth?.currentUser?.uid.toString()
+            message.question = uri!!.toString()
 
             // 파이어베이스 DB의 공부방 하위에 메세지 저장
             firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").document(message.message_id!!).set(message)
@@ -366,10 +368,13 @@ class TeacherActivity : AppCompatActivity() {
                     val not_answered_message_id = snapshot.toObject(StudyRoomDTO.Message::class.java).message_id
 
                     var map1 = mutableMapOf<String, Any>()
-                    map1["is_answered"] = true
+                    map1["_answered"] = true
 
                     var map2 = mutableMapOf<String, Any>()
                     map2["answer_id"] = answer_id
+
+                    var map3 = mutableMapOf<String, Any>()
+                    map3["subject"] = subject.toString()
 
                     firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").document(not_answered_message_id!!).update(map1)?.addOnCompleteListener {
                         task ->
@@ -379,6 +384,13 @@ class TeacherActivity : AppCompatActivity() {
                     }
 
                     firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").document(not_answered_message_id!!).update(map2)?.addOnCompleteListener {
+                            task ->
+                        if(task.isSuccessful){
+
+                        }
+                    }
+
+                    firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").document(not_answered_message_id!!).update(map3)?.addOnCompleteListener {
                             task ->
                         if(task.isSuccessful){
 
@@ -406,10 +418,10 @@ class TeacherActivity : AppCompatActivity() {
                     // 파이어베이스 DB의 공부방 하위에 답변 메세지 저장
                     firestore!!.collection("StudyRoom").document(target_document_layer1).collection("message").document(target_document_layer2).set(message)
 
-                    if(messageDTOs.contains(MessageDTO(false, answer, null, target_document_layer1, target_document_layer2))){
+                    if(messageDTOs.contains(MessageDTO(false, answer, null, target_document_layer1, target_document_layer2, not_answered_message_id))){
                         // 중복 방지
                     }else{
-                        messageDTOs.add(MessageDTO(false, answer, null, target_document_layer1, target_document_layer2))
+                        messageDTOs.add(MessageDTO(false, answer, null, target_document_layer1, target_document_layer2, not_answered_message_id))
                         recyclerview.adapter?.notifyDataSetChanged()
                         recyclerview.smoothScrollToPosition(messageDTOs.size - 1)
                     }

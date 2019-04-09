@@ -24,7 +24,8 @@ data class MessageDTO(
     var message:String? = null,
     var uri: Intent? = null,
     var target1: String? = null, // target_document_layer1, 질문한 어린이의 uid
-    var target2: String? = null  // target_document_layer2, 답변 메세지의 id
+    var target2: String? = null,  // target_document_layer2, 답변 메세지의 id
+    var answered_question_id: String? = null // 막 답변이 된 어린이 질문의 id
 )
 
 class TeacherRecyclerViewAdapter(messageDTOs:ArrayList<MessageDTO>) : RecyclerView.Adapter<RecyclerView.ViewHolder>(){
@@ -93,10 +94,10 @@ class TeacherRecyclerViewAdapter(messageDTOs:ArrayList<MessageDTO>) : RecyclerVi
                     }
 
                     var owner_id = messageDTOs[position].target1
-                    var userEmail:String? = null
                     var question:String? = null
                     var answer:String? = null
                     var subject:String? = null
+                    var is_scraped:String? = null
 
                     for(snapshot in documentSnapshot.data){
                         if(snapshot.key.equals("question")){
@@ -105,34 +106,53 @@ class TeacherRecyclerViewAdapter(messageDTOs:ArrayList<MessageDTO>) : RecyclerVi
                         if(snapshot.key.equals("message_content")){
                             answer = snapshot.value.toString()
                         }
-
                         if(snapshot.key.equals("subject")){
                             subject = snapshot.value.toString()
                         }
-                    }
-
-                    FirebaseFirestore.getInstance().collection("users").whereEqualTo("uid", owner_id!!).get().addOnCompleteListener {
-                        if (it.isSuccessful){
-                            for (document in it.result){
-                                userEmail = document.data["userEmail"].toString()
-                            }
+                        if(snapshot.key.equals("_scraped")){
+                            is_scraped = snapshot.value.toString()
                         }
                     }
 
-                    var diary = DiaryBookDTO.Diary()
+                    if (is_scraped == "false"){
 
-                    diary.diary_id = diary_id
-                    diary.answer = answer
-                    diary.date = date
-                    diary.question = question
-                    diary.timestamp = timestamp
-                    diary.owner_id = owner_id
-                    diary.is_photo = is_photo
-                    diary.subject = subject
-                    diary.userEmail = userEmail
+                        var diary = DiaryBookDTO.Diary()
 
-                    FirebaseFirestore.getInstance().collection("DiaryBook").document(diary_book_id!!).collection("diary").document(diary_id).set(diary)
+                        diary.diary_id = diary_id
+                        diary.answer = answer
+                        diary.date = date
+                        diary.question = question
+                        diary.timestamp = timestamp
+                        diary.owner_id = owner_id
+                        diary.is_photo = is_photo
+                        diary.subject = subject
 
+                        FirebaseFirestore.getInstance().collection("users").whereEqualTo("uid", owner_id!!).get().addOnCompleteListener {
+                            if (it.isSuccessful){
+                                for (document in it.result){
+                                    diary.userEmail = document.data["userEmail"].toString()
+                                }
+
+                                FirebaseFirestore.getInstance().collection("DiaryBook").document(diary_book_id!!).collection("diary").document(diary_id).set(diary)
+
+                                var map = mutableMapOf<String, Any>()
+                                map["_scraped"] = true
+                                FirebaseFirestore.getInstance().collection("StudyRoom").document(messageDTOs[position].target1!!).collection("message").document(messageDTOs[position].target2!!).update(map)?.addOnCompleteListener {
+                                        task ->
+                                    if(task.isSuccessful){
+
+                                    }
+                                }
+
+                                FirebaseFirestore.getInstance().collection("StudyRoom").document(messageDTOs[position].target1!!).collection("message").document(messageDTOs[position].answered_question_id!!).update(map)?.addOnCompleteListener {
+                                        task ->
+                                    if(task.isSuccessful){
+
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
             true
