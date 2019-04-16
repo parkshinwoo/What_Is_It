@@ -16,7 +16,7 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
         <activity
-                android:name=".navigation_activity.DiaryActivity"
+                android:name=".navigation_activity.DiaryFragment"
                 android:windowSoftInputMode="adjustResize">
         </activity>
         <activity

@@ -6,10 +6,12 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.support.design.widget.BottomNavigationView.OnNavigationItemSelectedListener
 import android.support.v4.app.ActivityCompat
+import android.support.v4.app.FragmentTransaction
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
 import android.widget.Toast
+import e.pshkh.what_is_it.navigation_activity.DiaryFragment
 import e.pshkh.what_is_it.navigation_activity.TeacherActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -45,7 +47,8 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
             }
 
             R.id.action_diary -> {
-
+                val fragment = DiaryFragment()
+                supportFragmentManager.beginTransaction().replace(R.id.main_content, fragment).commit()
             }
 
             R.id.action_recognize_emotion -> {
@@ -70,13 +73,17 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         val actionBar = supportActionBar
         actionBar?.title = "다이어리"
+
+        val transaction: FragmentTransaction = supportFragmentManager.beginTransaction();
+        transaction.replace(R.id.main_content, DiaryFragment()).commitAllowingStateLoss()
 
         bottom_navigation.setOnNavigationItemSelectedListener(this)
 
         // 시작할때마다 홈에서 시작하게끔 하단 네비게이션의 현재 선택된 아이템을 다이어리로 지정합니다.
-        bottom_navigation.selectedItemId = R.id.action_diary
+       //  bottom_navigation.selectedItemId = R.id.action_diary
 
         // 디바이스 사진첩, 카메라에 접근할 권한을 줍니다.
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA),1 )
