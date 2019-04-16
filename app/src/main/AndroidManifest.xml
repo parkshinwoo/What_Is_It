@@ -15,7 +15,17 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
-        <activity android:name=".navigation_activity.TeacherActivity">
+        <activity
+                android:name=".navigation_activity.DiaryActivity"
+                android:windowSoftInputMode="adjustResize">
+        </activity>
+        <activity
+                android:name=".navigation_activity.TeacherActivity"
+                android:windowSoftInputMode="adjustResize"
+                android:parentActivityName=".MainActivity">
+                <meta-data
+                        android:name="android.support.PARENT_ACTIVITY"
+                        android:value="e.pshkh.what_is_it.MainActivity"/>
         </activity>
         <activity android:name=".MainActivity">
         </activity>
@@ -27,4 +37,5 @@
             </intent-filter>
         </activity>
     </application>
+
 </manifest>

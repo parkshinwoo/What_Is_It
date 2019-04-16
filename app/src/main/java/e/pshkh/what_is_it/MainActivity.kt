@@ -70,6 +70,8 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        val actionBar = supportActionBar
+        actionBar?.title = "다이어리"
 
         bottom_navigation.setOnNavigationItemSelectedListener(this)
 

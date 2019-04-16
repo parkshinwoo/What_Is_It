@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">What_Is_It?</string>
+    <string name="app_name">이게뭐야?</string>
 
     <!-- Sign In -->
     <string name="email">이메일</string>

@@ -6,62 +6,11 @@
                 android:layout_height="match_parent"
                 tools:context=".MainActivity">
 
-    <android.support.v7.widget.Toolbar
-            android:id="@+id/my_toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="35dp"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentLeft="true">
-
-        <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-            <ImageView
-                    android:id="@+id/toolbar_btn_back"
-                    android:contentDescription="@string/no_image"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:layout_alignParentLeft="true"
-                    android:layout_marginRight="22dp"
-                    android:src="@drawable/ic_arrow_back" />
-
-            <TextView
-                    android:id="@+id/toolbar_username"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:layout_toRightOf="@id/toolbar_btn_back"
-                    android:gravity="center"
-                    android:textColor="@color/colorNavIcon"
-                    android:textSize="16sp" />
-
-            <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal">
-
-                <ImageView
-                        android:id="@+id/toolbar_title_image"
-                        android:layout_width="wrap_content"
-                        android:layout_height="70dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="@string/no_image"
-                        android:src="@drawable/logo_title"/>
-            </LinearLayout>
-
-        </RelativeLayout>
-
-    </android.support.v7.widget.Toolbar>
-
     <FrameLayout
             android:layout_above="@+id/bottom_navigation"
-            android:layout_below="@+id/my_toolbar"
             android:id="@+id/main_content"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-    </FrameLayout>
+            android:layout_height="match_parent"/>
 
     <android.support.design.widget.BottomNavigationView
 
@@ -70,12 +19,12 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_alignParentStart="true"
-            app:itemBackground="@color/colorWhite"
-            app:itemIconTint="@color/greenTea"
+            app:itemBackground="@color/colorPrimary"
+            app:itemIconTint="@color/colorWhite"
 
-            app:itemTextColor="@color/greenTea"
+            app:itemTextColor="@color/colorWhite"
             app:menu="@menu/bottom_navigation"
-            android:layout_alignParentLeft="true">
+    >
 
     </android.support.design.widget.BottomNavigationView>
 

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:orientation="vertical">
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="5dp">
+        <TextView
+                android:text="에펠탑"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/common_google_signin_btn_text_light_pressed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:id="@+id/diaryTitle"/>
+        <TextView
+                android:text="2019년 4월 19일 오후 5:30"
+                android:textSize="12sp"
+                android:textColor="@color/common_google_signin_btn_text_light_default"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:id="@+id/diaryDate" android:layout_marginBottom="5dp"/>
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+            <ImageView
+                    android:layout_width="100dp"
+                    android:layout_height="100dp" tools:srcCompat="@tools:sample/backgrounds/scenic[16]"
+                    android:id="@+id/diaryThumb" android:scaleType="centerCrop" android:layout_marginEnd="5dp"
+                    android:contentDescription="Diary Feed Thumbnail"/>
+            <TextView
+                    android:text="에펠 탑(프랑스어: Tour Eiffel, [tuʁ ɛfɛl])은 1889년 파리 마르스 광장에 지어진 탑이다. 프랑스의 대표 건축물인 이 탑은 격자 구조로 이루어져 파리에서 가장 높은 건축물이며, 매년 수백만 명이 방문할 만큼 세계적인 유료 관람지이다. 이를 디자인한 프랑스 공학자 및 건축가 귀스타브 에펠의 이름에서 명칭을 얻었으며, 1889년 프랑스 혁명 100주년 기념 세계 박람회의 출입 관문으로 건축되었다."
+                    android:textSize="14sp"
+                    android:textColor="@color/common_google_signin_btn_text_light_pressed"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content" android:id="@+id/diaryContent" android:layout_weight="1"/>
+        </LinearLayout>
+    </LinearLayout>
+    <View
+            android:layout_width="fill_parent"
+            android:layout_height="1px"
+            android:background="@color/common_google_signin_btn_text_light_default"/>
+</LinearLayout>

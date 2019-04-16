@@ -16,6 +16,7 @@ import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -81,6 +82,10 @@ class TeacherActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher)
 
+        val actionBar = supportActionBar
+        actionBar!!.title = "선생님"
+        actionBar.setDisplayHomeAsUpEnabled(true)
+
         storage = FirebaseStorage.getInstance()
         auth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
@@ -94,35 +99,16 @@ class TeacherActivity : AppCompatActivity() {
 
         // 텍스트로 질문할 경우 발생하는 이벤트
         chat.setOnClickListener {
-            if(!TextUtils.isEmpty(chatText.text)){
+            sendMessage()
+        }
 
-                question = chatText.text.toString()
-
-                // messageDTOs는 향후 다이어리 스크랩 기능에 사용될 정보를 담음
-                messageDTOs.add(MessageDTO(true, question, null, null, null, null))
-
-                // DB에 메세지 올리기
-                val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
-                // 현재 시스템 시간
-                val timestamp = System.currentTimeMillis()
-
-                // 공부방에 추가할 메세지 생성
-                var message = StudyRoomDTO.Message()
-                message.timestamp = timestamp
-                message.date = date
-                message.message_content = question
-                message.message_id = auth?.currentUser?.uid.toString() + timestamp.toString()
-                message.question_id = auth?.currentUser?.uid.toString() + timestamp.toString()
-                message.owner_id = auth?.currentUser?.uid.toString()
-                message.question = question
-
-                // 파이어베이스 DB의 공부방 하위에 메세지 저장
-                firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").document(message.message_id!!).set(message)
-
-                // 챗봇(다이얼로그 플로우)와 통신하는 쓰레드를 실행합니다.
-                TalkAsyncTask().execute(question)
-                // 메세지 입력창을 빈문자열로 초기화 해줍니다.
-                chatText.setText("")
+        // 키보드 전송버튼을 눌렀을 경우 발생하는 이벤트
+        chatText.setOnEditorActionListener() { v, actionId, event ->
+            if(actionId == EditorInfo.IME_ACTION_SEND){
+                sendMessage()
+                true
+            } else {
+                false
             }
         }
 
@@ -144,8 +130,10 @@ class TeacherActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        val rLayoutManager = LinearLayoutManager(this)
         recyclerview.adapter = TeacherRecyclerViewAdapter()
-        recyclerview.layoutManager = LinearLayoutManager(this)
+        rLayoutManager.stackFromEnd = true
+        recyclerview.layoutManager = rLayoutManager
     }
 
     override fun onStop() {
@@ -322,6 +310,40 @@ class TeacherActivity : AppCompatActivity() {
         }
     }
 
+    // 메세지를 전송할 때 사용하는 함수
+    fun sendMessage(){
+        if(!TextUtils.isEmpty(chatText.text)) {
+
+            question = chatText.text.toString()
+
+            // messageDTOs는 향후 다이어리 스크랩 기능에 사용될 정보를 담음
+            messageDTOs.add(MessageDTO(true, question, null, null, null, null))
+
+            // DB에 메세지 올리기
+            val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
+            // 현재 시스템 시간
+            val timestamp = System.currentTimeMillis()
+
+            // 공부방에 추가할 메세지 생성
+            var message = StudyRoomDTO.Message()
+            message.timestamp = timestamp
+            message.date = date
+            message.message_content = question
+            message.message_id = auth?.currentUser?.uid.toString() + timestamp.toString()
+            message.question_id = auth?.currentUser?.uid.toString() + timestamp.toString()
+            message.owner_id = auth?.currentUser?.uid.toString()
+            message.question = question
+
+            // 파이어베이스 DB의 공부방 하위에 메세지 저장
+            firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
+                .document(message.message_id!!).set(message)
+
+            // 챗봇(다이얼로그 플로우)와 통신하는 쓰레드를 실행합니다.
+            TalkAsyncTask().execute(question)
+            // 메세지 입력창을 빈문자열로 초기화 해줍니다.
+            chatText.setText("")
+        }
+    }
 
     // 이미지를 파이어베이스 스토리지 및 스토어에 업로드하는 함수입니다.
     fun photoUpload() {
