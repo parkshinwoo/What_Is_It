@@ -7,8 +7,12 @@
         android:layout_height="match_parent"
         android:fitsSystemWindows="true"
         tools:context=".navigation_activity.DiaryFragment">
+
     <android.support.v7.widget.RecyclerView
             app:layoutManager="android.support.v7.widget.LinearLayoutManager"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent"
+            android:id="@+id/DiaryRecyclerView"
+            app:stackFromEnd="true"
+            app:reverseLayout="true"/>
 </android.support.design.widget.CoordinatorLayout>
