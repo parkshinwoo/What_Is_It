@@ -5,6 +5,8 @@ import ai.api.AIDataService
 import ai.api.model.AIRequest
 import ai.api.model.Result
 import android.app.Activity
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.AsyncTask
@@ -17,6 +19,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.widget.EditText
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -207,7 +210,9 @@ class TeacherActivity : AppCompatActivity() {
                     holder.itemView.imagebubble.visibility = View.GONE
                     holder.itemView.right_chatbubble.visibility = View.VISIBLE
                     holder.itemView.right_chatbubble.text = message_list[position].message_content.toString()
+                    holder.itemView.rightTime.text = SimpleDateFormat("aa hh:mm").format(message_list[position].timestamp).toString()
                     holder.itemView.left_chatbubble.visibility = View.GONE
+                    holder.itemView.leftTime.visibility = View.GONE
                 } else{
                     // 내가 챗봇에게 사진을 보냈을 경우
                     holder.itemView.left_chatbubble.visibility = View.GONE
@@ -223,8 +228,11 @@ class TeacherActivity : AppCompatActivity() {
                 holder.itemView.imagebubble.visibility = View.GONE
                 holder.itemView.left_chatbubble.visibility = View.VISIBLE
                 holder.itemView.left_chatbubble.text = message_list[position].message_content.toString()
+
+                holder.itemView.leftTime.text = SimpleDateFormat("aa hh:mm").format(message_list[position].timestamp).toString()
                 holder.itemView.right_chatbubble.visibility = View.GONE
                 holder.itemView.checkImg.visibility = if(message_list[position].is_scraped!!) View.VISIBLE else View.GONE
+                holder.itemView.rightTime.visibility = View.GONE
             }
 
 
@@ -232,58 +240,73 @@ class TeacherActivity : AppCompatActivity() {
             holder.itemView.left_chatbubble.setOnLongClickListener {
                 if(messageDTOs[position].target1 != null && messageDTOs[position].target2 != null){
                     if (!message_list[position].is_scraped!!){
-                        val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
-                        val timestamp = System.currentTimeMillis()
-
-                        var diary_book_id : String?
-                        var diary_id : String?
-
-                        diary_book_id = messageDTOs[position].target1
-                        diary_id = messageDTOs[position].target1 + timestamp.toString()
-
-                        var is_photo:Boolean? = true
-                        if(messageDTOs[position].uri == null){
-                            is_photo = false
-                        }
-
                         var owner_id = messageDTOs[position].target1
                         var question = message_list[position].question
                         var answer = message_list[position].message_content.toString()
                         var subject = message_list[position].subject
                         var diary = DiaryBookDTO.Diary()
 
-                        diary.diary_id = diary_id
-                        diary.answer = answer
-                        diary.date = date
-                        diary.question = question
-                        diary.timestamp = timestamp
-                        diary.owner_id = owner_id
-                        diary.is_photo = is_photo
-                        diary.subject = subject
 
-                        FirebaseFirestore.getInstance().collection("users").whereEqualTo("uid", owner_id!!).get().addOnCompleteListener {
-                            if (it.isSuccessful){
-                                for (document in it.result){
-                                    diary.userEmail = document.data["userEmail"].toString()
+                        val dialog = AlertDialog.Builder(this@TeacherActivity)
+                        val input = EditText(this@TeacherActivity)
+                        input.setSingleLine()
+                        dialog.setTitle("다이어리 제목")
+                            .setMessage("다이어리 제목을 입력해주세요.")
+                            .setView(input)
+                            .setPositiveButton("확인") {dialogInterface, i ->
+                                subject = input.text.toString()
+
+                                val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
+                                val timestamp = System.currentTimeMillis()
+
+                                var diary_book_id : String?
+                                var diary_id : String?
+
+                                diary_book_id = messageDTOs[position].target1
+                                diary_id = messageDTOs[position].target1 + timestamp.toString()
+
+                                var is_photo:Boolean? = true
+                                if(messageDTOs[position].uri == null){
+                                    is_photo = false
                                 }
 
-                                FirebaseFirestore.getInstance().collection("DiaryBook").document(diary_book_id!!).collection("diary").document(diary_id).set(diary)
+                                diary.diary_id = diary_id
+                                diary.answer = answer
+                                diary.date = date
+                                diary.question = question
+                                diary.timestamp = timestamp
+                                diary.owner_id = owner_id
+                                diary.is_photo = is_photo
+                                diary.subject = subject
 
-                                var map = mutableMapOf<String, Any>()
-                                map["_scraped"] = true
-                                FirebaseFirestore.getInstance().collection("StudyRoom").document(messageDTOs[position].target1!!).collection("message").document(messageDTOs[position].target2!!).update(map)?.addOnCompleteListener {
-                                        task ->
-                                    if(task.isSuccessful){
-                                        FirebaseFirestore.getInstance().collection("StudyRoom").document(messageDTOs[position].target1!!).collection("message").document(messageDTOs[position].answered_question_id!!).update(map)?.addOnCompleteListener {
+                                FirebaseFirestore.getInstance().collection("users").whereEqualTo("uid", owner_id!!).get().addOnCompleteListener {
+                                    if (it.isSuccessful){
+                                        for (document in it.result){
+                                            diary.userEmail = document.data["userEmail"].toString()
+                                        }
+
+                                        FirebaseFirestore.getInstance().collection("DiaryBook").document(diary_book_id!!).collection("diary").document(diary_id).set(diary)
+
+                                        var map = mutableMapOf<String, Any>()
+                                        map["_scraped"] = true
+                                        FirebaseFirestore.getInstance().collection("StudyRoom").document(messageDTOs[position].target1!!).collection("message").document(messageDTOs[position].target2!!).update(map)?.addOnCompleteListener {
                                                 task ->
                                             if(task.isSuccessful){
-
+                                                FirebaseFirestore.getInstance().collection("StudyRoom").document(messageDTOs[position].target1!!).collection("message").document(messageDTOs[position].answered_question_id!!).update(map)?.addOnCompleteListener {
+                                                        task ->
+                                                    if(task.isSuccessful){
+                                                        Toast.makeText(this@TeacherActivity, "다이어리에 추가되었습니다.", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
+                            .setNegativeButton("취소") {dialogInterface, i -> }
+                            .show()
+
+
                     } else {
                         Toast.makeText(this@TeacherActivity, "이미 다이어리에 추가된 메세지입니다.", Toast.LENGTH_SHORT).show()
                     }

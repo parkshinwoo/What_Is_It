@@ -57,10 +57,10 @@ class DiaryRecyclerAdapter: RecyclerView.Adapter<RecyclerView.ViewHolder>(){
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        holder.itemView.diaryTitle.text = "DiaryTitle"
+        holder.itemView.diaryTitle.text = diaryList[position].subject
         holder.itemView.diaryContent.text = diaryList[position].answer
         holder.itemView.diaryDate.text = SimpleDateFormat("yyyy년MM월dd일 aa hh:mm:ss").format(diaryList[position].timestamp)
-        holder.itemView.diarySubject.text = diaryList[position].subject
+        //holder.itemView.diarySubject.text = diaryList[position].subject
         if(!diaryList[position].is_photo!!)
             holder.itemView.diaryThumb.visibility = View.GONE
     }

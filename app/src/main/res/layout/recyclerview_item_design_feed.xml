@@ -28,7 +28,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/diaryDate"
                 />
-
+<!--
         <TextView
                 android:text="과학"
                 android:textSize="12sp"
@@ -37,7 +37,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/diarySubject"
                 android:layout_marginBottom="5dp"/>
-
+-->
         <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
