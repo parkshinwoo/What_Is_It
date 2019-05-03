@@ -15,6 +15,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.text.TextUtils
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -345,7 +346,7 @@ class TeacherActivity : AppCompatActivity() {
                 .document(message.message_id!!).set(message)
 
             // 챗봇(다이얼로그 플로우)와 통신하는 쓰레드를 실행합니다.
-            TalkAsyncTask().execute(question)
+            TalkAsyncTask().execute(question, message.message_id)
             // 메세지 입력창을 빈문자열로 초기화 해줍니다.
             chatText.setText("")
         }
@@ -387,31 +388,32 @@ class TeacherActivity : AppCompatActivity() {
     }
 
     // 다이얼로그 플로우와 통신하는 쓰레드를 만들어줍니다.
-    inner class TalkAsyncTask : AsyncTask<String, Void, Result>(){
+    inner class TalkAsyncTask : AsyncTask<String, Void, Array<Any?>>(){
 
-        // 백그라운드에서 수행될 일을 작성합니다.
-        override fun doInBackground(vararg params: String?): Result {
+        override fun doInBackground(vararg params: String?): Array<Any?> {
 
             // 사용자가 전송한 메세지를 다이얼로그 플로우로 넘겨주는 쿼리입니다.
             var aiRequest = AIRequest()
-            aiRequest.setQuery(params[0]) 
-
+            var result = arrayOfNulls<Any?>(2)
+            aiRequest.setQuery(params[0])
             // 결과를 리턴합니다.
-            return aiDataService?.request(aiRequest)!!.result
+            result[0] = aiDataService?.request(aiRequest)!!.result
+            result[1] = params[1]
+            return result
         }
 
         // doInBackground 이후에 수행되는 곳입니다.
-        override fun onPostExecute(result: Result?) {
+        override fun onPostExecute(result: Array<Any?>) {
             // 리턴받은 결과가 null이 아니라면 메세지로 만들어줍니다.
             if(result != null){
-                makeMessage(result)
+                makeMessage(result[0] as Result, result[1] as String)
             }
         }
 
     }
 
     // 챗봇의 답장을 받아와서 메세지로 만들고 채팅창에 띄웁니다.
-    fun makeMessage(result: Result?){
+    fun makeMessage(result: Result?, messageId: String?){
 
         // 다이얼로그 플로우 콘솔에 직접 생성한 Intent가 있을때
         // 종류에 따라 필터링을 하는 겁니다.
@@ -426,9 +428,9 @@ class TeacherActivity : AppCompatActivity() {
                     var city = result.parameters["geo-city"]
                     if (city == null){
                         // 사용자가 도시를 언급안했을시 기본값으로 서울의 날씨를 알려줍니다.
-                        weatherMessage("서울특별시")
+                        weatherMessage("서울특별시", messageId)
                     } else{
-                        weatherMessage(city.asString)
+                        weatherMessage(city.asString, messageId)
                     }
                 } else {
 
@@ -459,7 +461,7 @@ class TeacherActivity : AppCompatActivity() {
 
                     // is_ansered가 false인 질문을 가져오고 거기에 답변 처리하고 DB에 올리기
                     val subject = "담임"
-                    do_answer(speech, subject)
+                    do_answer(speech, subject, messageId)
 
                 } else {
 
@@ -469,7 +471,7 @@ class TeacherActivity : AppCompatActivity() {
     }
 
     // 날씨에 관련된 챗봇의 답장을 만듭니다.
-    fun weatherMessage(city:String){
+    fun weatherMessage(city:String, messageId: String?){
 
         // city 파라메터로 넘어온걸 url에 붙입니다.
         // 맨끝의 Units-metric은 날씨를 섭씨로 받아오는 옵션입니다.
@@ -515,7 +517,7 @@ class TeacherActivity : AppCompatActivity() {
 
                             // is_ansered가 false인 질문을 가져오고 거기에 답변 처리하고 DB에 올리기
                             val subject = "과학"
-                            do_answer(message, subject)
+                            do_answer(message, subject, messageId)
 
                         }
                         break // 현재 시간에서 가장 가까운 미래의 날씨만 가져오면 됩니다. 계속 앞의 미래를 가져올 필요는 없으니 break 해줍니다.
@@ -525,84 +527,88 @@ class TeacherActivity : AppCompatActivity() {
         })
     }
 
-    fun do_answer(answer : String?, subject : String?){
+    fun do_answer(answer : String?, subject : String?, messageId: String?){
 
         val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
         val timestamp = System.currentTimeMillis()
         val answer_id = 0.toString() + timestamp.toString()
+        teacherSnapshot = firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
+            .orderBy("timestamp")?.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
+            if (querySnapshot == null) return@addSnapshotListener
 
-        val not_answered_question : ArrayList<StudyRoomDTO.Message>
-        not_answered_question = ArrayList()
+            val notAnsweredMessageId = messageId
 
-        teacherSnapshot = firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").orderBy("timestamp")?.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
-            if(querySnapshot == null) return@addSnapshotListener
+            var map1 = mutableMapOf<String, Any>()
+            map1["_answered"] = true
 
-            not_answered_question.clear()
+            var map2 = mutableMapOf<String, Any>()
+            map2["answer_id"] = answer_id
 
-            for(snapshot in querySnapshot.documents!!){
+            var map3 = mutableMapOf<String, Any>()
+            map3["subject"] = subject.toString()
 
-                not_answered_question.add(snapshot.toObject(StudyRoomDTO.Message::class.java))
+            firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
+                .document(notAnsweredMessageId!!).update(map1)?.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
+                        .document(notAnsweredMessageId!!).update(map2)?.addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
+                                .document(notAnsweredMessageId!!).update(map3)?.addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    // 공부방에 추가할 답변 메세지 생성
+                                    var message = StudyRoomDTO.Message()
 
-                for (n_a_q in not_answered_question){
-                    if(n_a_q.is_answered == false){
+                                    message.subject = subject
+                                    message.timestamp = timestamp
+                                    message.date = date
+                                    message.message_content = answer // 선생님의 답변 내용을 담음
+                                    message.is_answered = true
+                                    message.message_id = answer_id
+                                    message.question_id = notAnsweredMessageId
+                                    message.answer_id = answer_id
+                                    message.owner_id = 0.toString()
+                                    message.is_student = false
+                                    message.question = messageDTOs[messageDTOs.size - 1].message // for diary 어린이의 질문 내용을 담음
 
-                        val not_answered_message_id = n_a_q.message_id
+                                    var target_document_layer1 = auth?.currentUser?.uid!!
+                                    var target_document_layer2 = answer_id!!
 
-                        var map1 = mutableMapOf<String, Any>()
-                        map1["_answered"] = true
+                                    // 파이어베이스 DB의 공부방 하위에 답변 메세지 저장
+                                    firestore!!.collection("StudyRoom").document(target_document_layer1)
+                                        .collection("message").document(target_document_layer2).set(message)
 
-                        var map2 = mutableMapOf<String, Any>()
-                        map2["answer_id"] = answer_id
-
-                        var map3 = mutableMapOf<String, Any>()
-                        map3["subject"] = subject.toString()
-
-                        firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").document(not_answered_message_id!!).update(map1)?.addOnCompleteListener {
-                                task ->
-                            if(task.isSuccessful){
-                                firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").document(not_answered_message_id!!).update(map2)?.addOnCompleteListener {
-                                        task ->
-                                    if(task.isSuccessful){
-                                        firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message").document(not_answered_message_id!!).update(map3)?.addOnCompleteListener {
-                                                task ->
-                                            if(task.isSuccessful){
-                                                // 공부방에 추가할 답변 메세지 생성
-                                                var message = StudyRoomDTO.Message()
-
-                                                message.subject = subject
-                                                message.timestamp = timestamp
-                                                message.date = date
-                                                message.message_content = answer // 선생님의 답변 내용을 담음
-                                                message.is_answered = true
-                                                message.message_id = answer_id
-                                                message.question_id = not_answered_message_id
-                                                message.answer_id = answer_id
-                                                message.owner_id = 0.toString()
-                                                message.is_student = false
-                                                message.question = n_a_q.message_content // for diary 어린이의 질문 내용을 담음
-
-                                                var target_document_layer1 = auth?.currentUser?.uid!!
-                                                var target_document_layer2 = answer_id!!
-
-                                                // 파이어베이스 DB의 공부방 하위에 답변 메세지 저장
-                                                firestore!!.collection("StudyRoom").document(target_document_layer1).collection("message").document(target_document_layer2).set(message)
-
-                                                if(messageDTOs.contains(MessageDTO(false, answer, null, target_document_layer1, target_document_layer2, not_answered_message_id))){
-                                                    // 중복 방지
-                                                }else{
-                                                    messageDTOs.add(MessageDTO(false, answer, null, target_document_layer1, target_document_layer2, not_answered_message_id))
-                                                }
-                                            }
-                                        }
+                                    if (messageDTOs.contains(
+                                            MessageDTO(
+                                                false,
+                                                answer,
+                                                null,
+                                                target_document_layer1,
+                                                target_document_layer2,
+                                                notAnsweredMessageId
+                                            )
+                                        )
+                                    ) {
+                                        // 중복 방지
+                                    } else {
+                                        messageDTOs.add(
+                                            MessageDTO(
+                                                false,
+                                                answer,
+                                                null,
+                                                target_document_layer1,
+                                                target_document_layer2,
+                                                notAnsweredMessageId
+                                            )
+                                        )
                                     }
                                 }
                             }
                         }
                     }
                 }
-
-
             }
+
 
         }
     }
