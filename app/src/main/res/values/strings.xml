@@ -32,6 +32,10 @@
     <item name="visible" type="id"/>
     <item name="masked" type="id"/>
 
+    <string name="title_activity_diary_more_view">더보기</string>
+    <string name="diary_delete">삭제</string>
+    <string name="diary_share">공유하기</string>
+
 </resources>
 
 

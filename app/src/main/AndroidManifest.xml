@@ -16,16 +16,16 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
         <activity
-                android:name=".navigation_activity.DiaryFragment"
-                android:windowSoftInputMode="adjustResize">
+                android:name=".diaryMoreViewActivity"
+                android:label="@string/title_activity_diary_more_view">
         </activity>
         <activity
                 android:name=".navigation_activity.TeacherActivity"
-                android:windowSoftInputMode="adjustResize"
-                android:parentActivityName=".MainActivity">
-                <meta-data
-                        android:name="android.support.PARENT_ACTIVITY"
-                        android:value="e.pshkh.what_is_it.MainActivity"/>
+                android:parentActivityName=".MainActivity"
+                android:windowSoftInputMode="adjustResize">
+            <meta-data
+                    android:name="android.support.PARENT_ACTIVITY"
+                    android:value="e.pshkh.what_is_it.MainActivity"/>
         </activity>
         <activity android:name=".MainActivity">
         </activity>

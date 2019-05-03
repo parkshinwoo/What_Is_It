@@ -133,6 +133,11 @@ class TeacherActivity : AppCompatActivity() {
         }
     }
 
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressed()
+        return super.onSupportNavigateUp()
+    }
+
     override fun onResume() {
         super.onResume()
         val rLayoutManager = LinearLayoutManager(this)
