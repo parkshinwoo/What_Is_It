@@ -8,11 +8,28 @@
         android:fitsSystemWindows="true"
         tools:context=".navigation_activity.DiaryFragment">
 
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/DiaryInfo"
+            android:gravity="center"
+            android:visibility="visible">
+
+        <TextView
+                android:text="마음에 드는 답변을 다이어리에 추가해보세요."
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView"
+                android:gravity="center"/>
+    </LinearLayout>
+
     <android.support.v7.widget.RecyclerView
             app:layoutManager="android.support.v7.widget.LinearLayoutManager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/DiaryRecyclerView"
             app:stackFromEnd="true"
-            app:reverseLayout="true"/>
+            app:reverseLayout="true"
+            tools:visibility="gone"/>
 </android.support.design.widget.CoordinatorLayout>

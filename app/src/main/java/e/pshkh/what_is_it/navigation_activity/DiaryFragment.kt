@@ -8,15 +8,15 @@ import android.view.View
 import android.view.ViewGroup
 import e.pshkh.what_is_it.R
 import kotlinx.android.synthetic.main.activity_diary.view.*
+import java.util.zip.Inflater
 
 class DiaryFragment : Fragment() {
-    var mContext:Context? = null
-    var diaryAdapter: DiaryRecyclerAdapter? = null
+    private lateinit var diaryAdapter: DiaryRecyclerAdapter
+    private lateinit var diaryView: View
+
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        val diaryView = inflater!!.inflate(R.layout.activity_diary, container, false)
-
+        diaryView = inflater!!.inflate(R.layout.activity_diary, container, false)
         diaryView.DiaryRecyclerView.adapter = diaryAdapter
-
         return diaryView
     }
 
