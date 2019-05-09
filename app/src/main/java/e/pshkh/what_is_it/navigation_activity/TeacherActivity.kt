@@ -13,13 +13,14 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -229,10 +230,11 @@ class TeacherActivity : AppCompatActivity() {
                     holder.itemView.left_chatbubble.visibility = View.GONE
                     holder.itemView.right_chatbubble.visibility = View.GONE
 
-                    var photoUri: Uri?
-                    photoUri = message_list[position].message_content as Uri
+                    var photoUri: String?
+                    photoUri = message_list[position].message_content as String
                     holder.itemView.imagebubble.visibility = View.VISIBLE
-                    //holder.itemView.imagebubble.setImageURI(photoUri)
+
+                    Glide.with(holder.itemView.context).load(photoUri).apply(RequestOptions().circleCrop()).into(holder.itemView.imagebubble)
                 }
             } else {
                 // 챗봇이 내게 보낸 메세지일 경우
