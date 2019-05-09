@@ -234,6 +234,7 @@ class TeacherActivity : AppCompatActivity() {
                     photoUri = message_list[position].message_content as String
                     holder.itemView.imagebubble.visibility = View.VISIBLE
 
+                    // using Glide
                     Glide.with(holder.itemView.context).load(photoUri).apply(RequestOptions().circleCrop()).into(holder.itemView.imagebubble)
                 }
             } else {
