@@ -4,22 +4,29 @@
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:background="@color/colorPrimary"
                 tools:context=".LoginActivity">
 
     <ImageView
-            android:src="@drawable/logo_title"
+            android:src="@drawable/logo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_above="@id/signin_layout"
-            android:layout_marginTop="0dp" android:layout_marginBottom="0dp"/>
+            android:layout_marginTop="0dp"
+            android:layout_marginBottom="0dp"
+            android:scaleX="0.5"
+            android:scaleY="0.5"/>
 
     <LinearLayout
             android:id="@+id/signin_layout"
+            android:gravity="center"
             android:orientation="vertical"
+            android:background="@color/colorWhite"
             android:layout_alignParentBottom="true"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:paddingTop="10dp">
 
         <android.support.design.widget.TextInputLayout
                 android:layout_marginLeft="20dp"
@@ -28,12 +35,12 @@
                 android:layout_height="wrap_content">
 
             <EditText
-                    android:singleLine = "true"
-                    android:lines = "1"
+                    android:singleLine="true"
+                    android:lines="1"
                     android:id="@+id/email_edittext"
                     android:hint="@string/email"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:layout_height="match_parent"/>
         </android.support.design.widget.TextInputLayout>
 
 
@@ -44,13 +51,13 @@
                 android:layout_height="wrap_content">
 
             <EditText
-                    android:singleLine = "true"
-                    android:lines = "1"
+                    android:singleLine="true"
+                    android:lines="1"
                     android:id="@+id/password_edittext"
                     android:inputType="textPassword"
                     android:hint="@string/password"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:layout_height="match_parent"/>
         </android.support.design.widget.TextInputLayout>
 
         <Button
@@ -58,14 +65,14 @@
                 android:text="@string/signin_email"
                 android:theme="@style/ButtonStyle"
                 android:textColor="@color/colorWhite"
-                android:background="@color/greenTea"
+                android:background="@color/colorPrimary"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="20dp"
                 android:layout_marginBottom="20dp"
                 android:layout_marginTop="15dp"
-        />
+                />
     </LinearLayout>
 
 </RelativeLayout>

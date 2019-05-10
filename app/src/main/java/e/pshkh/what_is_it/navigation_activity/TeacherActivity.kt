@@ -353,7 +353,7 @@ class TeacherActivity : AppCompatActivity() {
         // 사진의 파일 형식은 png로 하며 파일명은 사진이 업로드된 시각으로 합니다.
         val imageFileName = "PNG_" + date + "_.png"
         // 파이어베이스 스토리지에 images라는 디렉터리를 생성하고 그곳에 사진을 업로드합니다.
-        val storageRef = storage?.reference?.child("images")?.child(imageFileName)
+        val storageRef = storage?.reference?.child("images")?.child(auth?.currentUser?.uid.toString())!!.child(imageFileName)
 
         // 파이어베이스 스토리지에 이미지 올리기
         storageRef?.putFile(photoUri!!)?.addOnSuccessListener { taskSnapshot ->
