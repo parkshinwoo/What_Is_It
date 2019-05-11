@@ -2,7 +2,6 @@ package e.pshkh.what_is_it.navigation_activity
 
 import android.content.Context
 import android.content.Intent
-import android.support.constraint.ConstraintLayout
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -18,7 +17,8 @@ import e.pshkh.what_is_it.diaryMoreViewActivity
 import kotlinx.android.synthetic.main.diary_card.view.*
 import java.text.SimpleDateFormat
 
-class DiaryRecyclerAdapter(val context: Context?) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout) :
+    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var firestore: FirebaseFirestore? = null
     private var diarySnapshot: ListenerRegistration? = null
     private var storage: FirebaseStorage? = null
@@ -52,20 +52,14 @@ class DiaryRecyclerAdapter(val context: Context?) : RecyclerView.Adapter<Recycle
                 }
                 if (diaryList.isNotEmpty()) {
                     notifyDataSetChanged()
+                    emptyMsgView.visibility = View.GONE
                 }
             }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecyclerView.ViewHolder {
         var view = LayoutInflater.from(parent!!.context).inflate(R.layout.diary_card, parent, false)
-        var parentview: ConstraintLayout
-     /*   if (itemCount == 0) {
-            parentview = parent.parent
-            parent.parent.findViewById<LinearLayout>(R.id.DiaryInfo).visibility = View.VISIBLE
-        }else {
-            parent.parent.findViewById<RecyclerView>(R.id.DiaryRecyclerView).visibility = View.VISIBLE
-            parent.parent.findViewById<LinearLayout>(R.id.DiaryInfo).visibility = View.GONE
-        }*/
+
         return DiaryViewHolder(view)
     }
 
@@ -74,7 +68,6 @@ class DiaryRecyclerAdapter(val context: Context?) : RecyclerView.Adapter<Recycle
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-
         holder.itemView.diaryTitle.text = diaryList[position].subject
         holder.itemView.diaryContent.text = diaryList[position].answer
         holder.itemView.diaryDate.text =

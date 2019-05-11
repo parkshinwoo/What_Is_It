@@ -7,22 +7,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import e.pshkh.what_is_it.R
+import kotlinx.android.synthetic.main.activity_diary.*
 import kotlinx.android.synthetic.main.activity_diary.view.*
-import java.util.zip.Inflater
 
 class DiaryFragment : Fragment() {
     private lateinit var diaryAdapter: DiaryRecyclerAdapter
-    private lateinit var diaryView: View
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        diaryView = inflater!!.inflate(R.layout.activity_diary, container, false)
+        val diaryView = inflater!!.inflate(R.layout.activity_diary, container, false)
+
+        diaryAdapter = DiaryRecyclerAdapter(context, diaryView.emptyMsg)
         diaryView.DiaryRecyclerView.adapter = diaryAdapter
         return diaryView
-    }
-
-    override fun onAttach(context: Context?) {
-        diaryAdapter = DiaryRecyclerAdapter(context)
-        super.onAttach(context)
     }
 
     override fun onResume() {

@@ -9,6 +9,7 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.app.FragmentTransaction
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.Toolbar
 import android.view.MenuItem
 import android.widget.Toast
 import e.pshkh.what_is_it.navigation_activity.DiaryFragment
@@ -17,16 +18,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
 
-    // 맨 상단에 위치하는게 툴바입니다.
-    // 툴바의 기본 디자인을 지정하는 코드입니다.
-    fun setToolbarDefault(){
-
-    }
-
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
-
-        setToolbarDefault()
-
         // 하단 네비게이션 바에 여러 아이템들이 있습니다.
         // 사용자가 네비게이션 바의 특정 아이템을 선택하면 해당하는 화면으로 이동시켜주는 기능입니다.
 
@@ -49,7 +41,9 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
             R.id.action_diary -> {
                 val fragment = DiaryFragment()
                 supportFragmentManager.beginTransaction().replace(R.id.main_content, fragment).commit()
+                return true
             }
+
 
             R.id.action_recognize_emotion -> {
 
@@ -74,8 +68,8 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val actionBar = supportActionBar
-        actionBar?.title = "다이어리"
+        var mToolbar: Toolbar = this.findViewById(R.id.toolbar2)
+        setSupportActionBar(mToolbar)
 
         val transaction: FragmentTransaction = supportFragmentManager.beginTransaction();
         transaction.replace(R.id.main_content, DiaryFragment()).commitAllowingStateLoss()

@@ -2,25 +2,22 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-            app:showAsAction="always"
+            app:showAsAction="ifRoom"
             android:id="@+id/action_diary"
-            android:enabled="true"
             android:icon="@drawable/ic_diary"
             android:title="@string/diary"
     ></item>
 
     <item
-            app:showAsAction="always"
+            app:showAsAction="ifRoom"
             android:id="@+id/action_teacher"
-            android:enabled="true"
             android:icon="@drawable/ic_teacher"
             android:title="@string/teacher"
     ></item>
 
     <item
-            app:showAsAction="always"
+            app:showAsAction="ifRoom"
             android:id="@+id/action_recognize_emotion"
-            android:enabled="true"
             android:icon="@drawable/ic_face"
             android:title="@string/emotion"
     ></item>
