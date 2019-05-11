@@ -32,21 +32,21 @@ class DiaryRecyclerAdapter(val context: Context?) : RecyclerView.Adapter<Recycle
 
         diarySnapshot = firestore!!.collection("DiaryBook").document(auth?.currentUser?.uid!!).collection("diary")
             .orderBy("timestamp")?.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
-                var item: DiaryBookDTO.Diary
+                var item: DiaryBookDTO.Diary?
                 diaryList.clear()
-                for (snapshot in querySnapshot.documents!!) {
+                for (snapshot in querySnapshot!!.documents!!) {
                     item = snapshot.toObject(DiaryBookDTO.Diary::class.java)
                     diaryList.add(
                         DiaryBookDTO.Diary(
-                            item.diary_id,
-                            item.timestamp,
-                            item.date,
-                            item.is_photo,
-                            item.question,
-                            item.answer,
-                            item.subject,
-                            item.owner_id,
-                            item.userEmail
+                            item?.diary_id,
+                            item?.timestamp,
+                            item?.date,
+                            item?.is_photo,
+                            item?.question,
+                            item?.answer,
+                            item?.subject,
+                            item?.owner_id,
+                            item?.userEmail
                         )
                     )
                 }

@@ -6,13 +6,17 @@ import ai.api.model.AIRequest
 import ai.api.model.Result
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.ProgressDialog
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
+import android.provider.MediaStore
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,6 +29,9 @@ import com.bumptech.glide.request.RequestOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.ml.vision.FirebaseVision
+import com.google.firebase.ml.vision.common.FirebaseVisionImage
+import com.google.firebase.ml.vision.label.FirebaseVisionLabelDetectorOptions
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import e.pshkh.what_is_it.R
@@ -40,7 +47,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 class TeacherActivity : AppCompatActivity() {
-    val message_list: ArrayList<StudyRoomDTO.Message> = ArrayList()
+    val message_list: ArrayList<StudyRoomDTO.Message?> = ArrayList()
     // 다이얼로그 플로우와 통신하기 위한 클래스입니다.
     var aiDataService: AIDataService? = null
 
@@ -190,7 +197,7 @@ class TeacherActivity : AppCompatActivity() {
                     if (querySnapshot == null) return@addSnapshotListener
 
                     message_list.clear()
-                    var message: StudyRoomDTO.Message
+                    var message: StudyRoomDTO.Message?
                     for (snapshot in querySnapshot.documents) {
                         message_list.add(snapshot.toObject(StudyRoomDTO.Message::class.java))
                         message = message_list.get(message_list.size - 1)
@@ -220,16 +227,16 @@ class TeacherActivity : AppCompatActivity() {
 
             holder.setIsRecyclable(false)
 
-            if (message_list[position].owner_id != "0") {
+            if (message_list[position]?.owner_id != "0") {
 
-                if (message_list[position].is_photo == false) {
+                if (message_list[position]?.is_photo == false) {
                     // 내가 챗봇에게 보낸 텍스트 메세지일 경우에는 나의 말풍선만 보이게 하고
                     // 챗봇의 말풍선은 가려야합니다.
                     holder.itemView.imagebubble.visibility = View.GONE
                     holder.itemView.right_chatbubble.visibility = View.VISIBLE
-                    holder.itemView.right_chatbubble.text = message_list[position].message_content.toString()
+                    holder.itemView.right_chatbubble.text = message_list[position]?.message_content.toString()
                     holder.itemView.rightTime.text =
-                        SimpleDateFormat("aa hh:mm").format(message_list[position].timestamp).toString()
+                        SimpleDateFormat("aa hh:mm").format(message_list[position]?.timestamp).toString()
                     holder.itemView.left_chatbubble.visibility = View.GONE
                     holder.itemView.leftTime.visibility = View.GONE
                 } else {
@@ -238,10 +245,10 @@ class TeacherActivity : AppCompatActivity() {
                     holder.itemView.right_chatbubble.visibility = View.GONE
                     holder.itemView.leftTime.visibility = View.GONE
                     holder.itemView.rightTime.text =
-                        SimpleDateFormat("aa hh:mm").format(message_list[position].timestamp).toString()
+                        SimpleDateFormat("aa hh:mm").format(message_list[position]?.timestamp).toString()
 
                     var photoUri: String?
-                    photoUri = message_list[position].message_content as String
+                    photoUri = message_list[position]?.message_content as String
                     holder.itemView.imagebubble.visibility = View.VISIBLE
 
                     // using Glide
@@ -254,23 +261,23 @@ class TeacherActivity : AppCompatActivity() {
                 // 챗봇이 내게 보낸 메세지일 경우
                 holder.itemView.rightBubbleLayout.visibility = View.GONE
                 holder.itemView.left_chatbubble.visibility = View.VISIBLE
-                holder.itemView.left_chatbubble.text = message_list[position].message_content.toString()
+                holder.itemView.left_chatbubble.text = message_list[position]?.message_content.toString()
                 holder.itemView.leftTime.text =
-                    SimpleDateFormat("aa hh:mm").format(message_list[position].timestamp).toString()
+                    SimpleDateFormat("aa hh:mm").format(message_list[position]?.timestamp).toString()
                 holder.itemView.checkImg.visibility =
-                    if (message_list[position].is_scraped!!) View.VISIBLE else View.GONE
+                    if (message_list[position]?.is_scraped!!) View.VISIBLE else View.GONE
                 holder.itemView.rightTime.visibility = View.GONE
             }
 
 
             // 다이어리에 올리는 이벤트 발생
             holder.itemView.left_chatbubble.setOnLongClickListener {
-                if (message_list[position].owner_id != null && message_list[position].message_id != null) {
-                    if (!message_list[position].is_scraped!!) {
+                if (message_list[position]?.owner_id != null && message_list[position]?.message_id != null) {
+                    if (!message_list[position]?.is_scraped!!) {
                         var owner_id = auth!!.currentUser!!.uid
-                        var question = message_list[position].question
-                        var answer = message_list[position].message_content.toString()
-                        var subject = message_list[position].subject
+                        var question = message_list[position]?.question
+                        var answer = message_list[position]?.message_content.toString()
+                        var subject = message_list[position]?.subject
                         var diary = DiaryBookDTO.Diary()
 
                         val dialog = AlertDialog.Builder(this@TeacherActivity)
@@ -284,10 +291,10 @@ class TeacherActivity : AppCompatActivity() {
                                 val timestamp = System.currentTimeMillis()
 
                                 var diary_book_id = owner_id
-                                var diary_id = message_list[position].message_id
+                                var diary_id = message_list[position]?.message_id
 
                                 var is_photo: Boolean? = true
-                                if (message_list[position].is_photo == false) {
+                                if (message_list[position]?.is_photo == false) {
                                     is_photo = false
                                 }
 
@@ -302,22 +309,22 @@ class TeacherActivity : AppCompatActivity() {
 
                                 FirebaseFirestore.getInstance().collection("users").whereEqualTo("uid", owner_id!!)
                                     .get().addOnCompleteListener {
-                                    if (it.isSuccessful) {
-                                        for (document in it.result) {
-                                            diary.userEmail = document.data["userEmail"].toString()
+                                        if (it.isSuccessful) {
+                                            for (document in it.result) {
+                                                diary.userEmail = document.data["userEmail"].toString()
+                                            }
+                                            // 다이어리에 답변 저장
+                                            FirebaseFirestore.getInstance().collection("DiaryBook")
+                                                .document(diary_book_id!!).collection("diary").document(diary_id!!)
+                                                .set(diary)
                                         }
-                                        // 다이어리에 답변 저장
-                                        FirebaseFirestore.getInstance().collection("DiaryBook")
-                                            .document(diary_book_id!!).collection("diary").document(diary_id!!)
-                                            .set(diary)
                                     }
-                                }
 
                                 // 답변 스크랩 업데이트
                                 var map = mutableMapOf<String, Any>()
                                 map["_scraped"] = true
                                 FirebaseFirestore.getInstance().collection("StudyRoom").document(owner_id)
-                                    .collection("message").document(message_list[position].message_id!!).update(map)
+                                    .collection("message").document(message_list[position]?.message_id!!).update(map)
                                     ?.addOnCompleteListener { task ->
                                         if (task.isSuccessful) {
                                             Toast.makeText(this@TeacherActivity, "다이어리에 추가되었습니다.", Toast.LENGTH_SHORT)
@@ -377,6 +384,12 @@ class TeacherActivity : AppCompatActivity() {
         val storageRef =
             storage?.reference?.child("images")?.child(auth?.currentUser?.uid.toString())!!.child(imageFileName)
 
+        val progressDialog: ProgressDialog = ProgressDialog(this) // Deprecated되었으나 그냥 사용하겠음
+        progressDialog.setMessage("이미지 업로드중...")
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+        progressDialog.show()
+
+
         // 파이어베이스 스토리지에 이미지 올리기
         storageRef?.putFile(photoUri!!)?.addOnSuccessListener { taskSnapshot ->
 
@@ -395,9 +408,30 @@ class TeacherActivity : AppCompatActivity() {
             message.question = uri!!.toString()
 
             // 파이어베이스 DB의 공부방 하위에 메세지 저장
+
+            // ML Kit Image Labeling 사용
+            val imageML =
+                FirebaseVisionImage.fromBitmap(MediaStore.Images.Media.getBitmap(this.contentResolver, photoUri))
+
+            val labelDetector = FirebaseVision.getInstance().visionLabelDetector
+            labelDetector.detectInImage(imageML)
+                .addOnSuccessListener {labels ->
+                    var answer: String = ""
+                    for (label in labels) {
+                        answer +=  label.label + " : " + label.confidence + "\n"
+                    }
+                    do_answer(answer, "사진", message.message_id)
+
+                }
+                .addOnFailureListener {
+                }
             firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
                 .document(message.message_id!!).set(message)
+            progressDialog.dismiss()
 
+        }.addOnProgressListener { taskSnapshot ->
+            val progress = (100 * taskSnapshot.bytesTransferred) / taskSnapshot.totalByteCount
+            progressDialog.progress = progress.toInt()
         }
     }
 
