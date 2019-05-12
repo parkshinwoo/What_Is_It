@@ -8,7 +8,6 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
@@ -16,7 +15,6 @@ import android.provider.MediaStore
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -31,9 +29,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
-import com.google.firebase.ml.vision.label.FirebaseVisionLabelDetectorOptions
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
+import com.theartofdev.edmodo.cropper.CropImage
 import e.pshkh.what_is_it.R
 import e.pshkh.what_is_it.data_transfer_object.DiaryBookDTO
 import e.pshkh.what_is_it.data_transfer_object.StudyRoomDTO
@@ -142,17 +140,16 @@ class TeacherActivity : AppCompatActivity() {
 
             q_text_flag = false
 
+            CropImage.activity().start(this)
+
+            /*
             var photoPickerIntent = Intent(Intent.ACTION_GET_CONTENT) // ACTION_PICK은 안되는 기종이 있음.
             photoPickerIntent.type = "image/*"
             startActivityForResult(
                 Intent.createChooser(photoPickerIntent, "앨범을 선택해주세요."),
                 REQUEST_TAKE_ALBUM
-            ) // 1 = REQUEST_TAKE_ALBUM
+            ) // 1 = REQUEST_TAKE_ALBUM */*/
 
-            /*// 챗봇(다이얼로그 플로우)와 통신하는 쓰레드를 실행합니다.
-            TalkAsyncTask().execute(question)
-            // 메세지 입력창을 빈문자열로 초기화 해줍니다.
-            chatText.setText("")*/
         }
     }
 
@@ -177,7 +174,18 @@ class TeacherActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+            val result = CropImage.getActivityResult(data)
+
+            if (resultCode == Activity.RESULT_OK) {
+                photoUri = result.uri
+                photoUpload()
+            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+                Toast.makeText(this, "에러 : ${result.error.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+        /*super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_TAKE_ALBUM) {
             if (resultCode == Activity.RESULT_OK) {
                 photoUri = data?.data
@@ -185,7 +193,7 @@ class TeacherActivity : AppCompatActivity() {
             } else if (resultCode == Activity.RESULT_CANCELED) {
                 finish()
             }
-        }
+        }*/
     }
 
     inner class TeacherRecyclerViewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
