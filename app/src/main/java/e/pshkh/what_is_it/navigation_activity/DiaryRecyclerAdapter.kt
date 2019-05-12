@@ -50,10 +50,12 @@ class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout
                         )
                     )
                 }
-                if (diaryList.isNotEmpty()) {
-                    notifyDataSetChanged()
+                if (diaryList.isNotEmpty())
                     emptyMsgView.visibility = View.GONE
-                }
+                else
+                    emptyMsgView.visibility = View.VISIBLE
+
+                notifyDataSetChanged()
             }
     }
 
