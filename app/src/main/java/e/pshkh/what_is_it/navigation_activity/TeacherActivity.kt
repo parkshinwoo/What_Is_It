@@ -436,20 +436,28 @@ class TeacherActivity : AppCompatActivity() {
             val imageML =
                 FirebaseVisionImage.fromBitmap(MediaStore.Images.Media.getBitmap(this.contentResolver, photoUri))
 
-            val options = FirebaseVisionOnDeviceImageLabelerOptions.Builder()
-                .setConfidenceThreshold(0.6F) // 정확도 임계값 60%
-                .build()
-
-            val labelDetector = FirebaseVision.getInstance().getOnDeviceImageLabeler(options)
+            val labelDetector = FirebaseVision.getInstance().cloudImageLabeler
 
             labelDetector.processImage(imageML)
                 .addOnSuccessListener {
                     var photo_answer : String? = ""
-
+                    var resultTexts: ArrayList<String> = ArrayList()
                     for (label in it){
                         photo_answer += label.text + " : " + label.confidence + "\n"
+                        resultTexts.add(label.text)
                     }
-                    do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
+                    if("Landmark" in resultTexts) {
+                        val landmarkDetector = FirebaseVision.getInstance().getVisionCloudLandmarkDetector()
+                        landmarkDetector.detectInImage(imageML).addOnSuccessListener { landmarks ->
+                            var landmarkMsg = "이 사진은 "
+                            for(landmark in landmarks){
+                                landmarkMsg += landmark.landmark
+                            }
+                            landmarkMsg += "을(를) 찍은 사진 같구나."
+                            do_answer(landmarkMsg, "랜드마크", message.message_id)
+                        }
+                    } else
+                        do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
                 }.addOnFailureListener {
                     var photo_answer : String? = "무슨 사진인지 모르겠구나 좀 더 자세히 찍어볼래?"
                     do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
