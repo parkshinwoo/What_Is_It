@@ -441,67 +441,82 @@ class TeacherActivity : AppCompatActivity() {
         progressDialog.show()
         // 파이어베이스 스토리지에 이미지 올리기
         storageRef?.putFile(photoUri!!)?.addOnSuccessListener { taskSnapshot ->
+            storageRef.downloadUrl.addOnCompleteListener {
+                // 업로드된 이미지 주소를 가져오기 파일 경로
+                var uri = it.result
 
-            // 업로드된 이미지 주소를 가져오기 파일 경로
-            var uri = taskSnapshot.uploadSessionUri
+                // 공부방에 추가할 메세지 생성
+                var message = StudyRoomDTO.Message()
+                message.timestamp = timestamp
+                message.date = date
+                message.message_content = uri!!.toString() // 사진일 경우 메세지의 내용은 사진의 uri
+                message.is_photo = true
+                message.message_id = auth?.currentUser?.uid.toString() + timestamp.toString()
+                message.question_id = auth?.currentUser?.uid.toString() + timestamp.toString()
+                message.owner_id = auth?.currentUser?.uid.toString()
+                message.question = uri!!.toString()
 
-            // 공부방에 추가할 메세지 생성
-            var message = StudyRoomDTO.Message()
-            message.timestamp = timestamp
-            message.date = date
-            message.message_content = uri!!.toString() // 사진일 경우 메세지의 내용은 사진의 uri
-            message.is_photo = true
-            message.message_id = auth?.currentUser?.uid.toString() + timestamp.toString()
-            message.question_id = auth?.currentUser?.uid.toString() + timestamp.toString()
-            message.owner_id = auth?.currentUser?.uid.toString()
-            message.question = uri!!.toString()
+                // ML Kit Image Labeling 사용
+                val imageML =
+                    FirebaseVisionImage.fromBitmap(MediaStore.Images.Media.getBitmap(this.contentResolver, photoUri))
 
-            // ML Kit Image Labeling 사용
-            val imageML =
-                FirebaseVisionImage.fromBitmap(MediaStore.Images.Media.getBitmap(this.contentResolver, photoUri))
+                val labelDetector = FirebaseVision.getInstance().cloudImageLabeler
 
-            val labelDetector = FirebaseVision.getInstance().cloudImageLabeler
+                labelDetector.processImage(imageML)
+                    .addOnSuccessListener {
+                        var resultTexts: ArrayList<String> = ArrayList()
+                        for (label in it) {
+                            resultTexts.add(label.text)
+                        }
+                        if ("Landmark" in resultTexts) {
+                            val landmarkDetector = FirebaseVision.getInstance().getVisionCloudLandmarkDetector()
+                            landmarkDetector.detectInImage(imageML).addOnSuccessListener { landmarks ->
+                                val options =
+                                    FirebaseTranslatorOptions.Builder().setSourceLanguage(FirebaseTranslateLanguage.EN)
+                                        .setTargetLanguage(FirebaseTranslateLanguage.KO).build()
+                                val translator = FirebaseNaturalLanguage.getInstance().getTranslator(options)
+                                translator.downloadModelIfNeeded().addOnSuccessListener {
+                                    translator.translate(landmarks[0].landmark).addOnSuccessListener { it ->
+                                        var landmarkMsg = "이 사진은 ${it}을(를) 찍은 사진 같구나."
+                                        do_answer(landmarkMsg, "랜드마크", message.message_id)
+                                    }.addOnFailureListener {
+                                        Log.d("Translation Error", it.message)
+                                        var landmarkMsg = "이 사진은 ${landmarks[0].landmark}을(를) 찍은 사진 같구나."
+                                        do_answer(landmarkMsg, "랜드마크", message.message_id)
+                                    }
+                                }.addOnFailureListener {
+                                    Log.d("TranslateDownloadError", it.message)
+                                }
 
-            labelDetector.processImage(imageML)
-                .addOnSuccessListener {
-                    var photo_answer: String? = ""
-                    var resultTexts: ArrayList<String> = ArrayList()
-                    for (label in it) {
-                        photo_answer += label.text + " : " + label.confidence + "\n"
-                        resultTexts.add(label.text)
-                    }
-                    if ("Landmark" in resultTexts) {
-                        val landmarkDetector = FirebaseVision.getInstance().getVisionCloudLandmarkDetector()
-                        landmarkDetector.detectInImage(imageML).addOnSuccessListener { landmarks ->
+                            }
+                        } else {
                             val options =
                                 FirebaseTranslatorOptions.Builder().setSourceLanguage(FirebaseTranslateLanguage.EN)
                                     .setTargetLanguage(FirebaseTranslateLanguage.KO).build()
                             val translator = FirebaseNaturalLanguage.getInstance().getTranslator(options)
                             translator.downloadModelIfNeeded().addOnSuccessListener {
-                                translator.translate(landmarks[0].landmark).addOnSuccessListener { it ->
-                                    var landmarkMsg = "이 사진은 ${it}을(를) 찍은 사진 같구나."
-                                    do_answer(landmarkMsg, "랜드마크", message.message_id)
+                                translator.translate(resultTexts[0]).addOnSuccessListener { it ->
+                                    var photoMsg = "이 사진은 ${it}을(를) 찍은 사진 같구나."
+                                    do_answer(photoMsg, "사진", message.message_id)
                                 }.addOnFailureListener {
                                     Log.d("Translation Error", it.message)
-                                    var landmarkMsg = "이 사진은 ${landmarks[0].landmark}을(를) 찍은 사진 같구나."
-                                    do_answer(landmarkMsg, "랜드마크", message.message_id)
+                                    var photoMsg = "이 사진은 ${resultTexts[0]}을(를) 찍은 사진 같구나."
+                                    do_answer(photoMsg, "사진", message.message_id)
                                 }
                             }.addOnFailureListener {
                                 Log.d("TranslateDownloadError", it.message)
                             }
-
                         }
-                    } else
+                    }.addOnFailureListener {
+                        var photo_answer: String? = "무슨 사진인지 모르겠구나 좀 더 자세히 찍어볼래?"
                         do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
-                }.addOnFailureListener {
-                    var photo_answer: String? = "무슨 사진인지 모르겠구나 좀 더 자세히 찍어볼래?"
-                    do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
-                }
+                    }
 
-            // 파이어베이스 DB의 공부방 하위에 질문 메세지 저장
-            firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
-                .document(message.message_id!!).set(message)
-            progressDialog.dismiss()
+                // 파이어베이스 DB의 공부방 하위에 질문 메세지 저장
+                firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
+                    .document(message.message_id!!).set(message)
+                progressDialog.dismiss()
+            }
         }.addOnProgressListener { taskSnapshot ->
             val progress = (100 * taskSnapshot.bytesTransferred) / taskSnapshot.totalByteCount
             progressDialog.progress = progress.toInt()
