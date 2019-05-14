@@ -24,6 +24,8 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
 import com.google.firebase.FirebaseApp
+import com.google.android.gms.tasks.Continuation
+import com.google.android.gms.tasks.Task
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -36,6 +38,7 @@ import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslatorOption
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.UploadTask
 import com.google.gson.Gson
 import com.theartofdev.edmodo.cropper.CropImage
 import e.pshkh.what_is_it.R
@@ -496,17 +499,32 @@ class TeacherActivity : AppCompatActivity() {
                             }
 
                         }
-                    } else
+                        if ("Landmark" in resultTexts) {
+                            val landmarkDetector = FirebaseVision.getInstance().getVisionCloudLandmarkDetector()
+                            landmarkDetector.detectInImage(imageML).addOnSuccessListener { landmarks ->
+                                var landmarkMsg = "이 사진은 "
+                                for (landmark in landmarks) {
+                                    landmarkMsg += landmark.landmark
+                                }
+                                landmarkMsg += "을(를) 찍은 사진 같구나."
+                                do_answer(landmarkMsg, "랜드마크", message.message_id)
+                            }
+                        } else
+                            do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
+                    }.addOnFailureListener {
+                        var photo_answer: String? = "무슨 사진인지 모르겠구나 좀 더 자세히 찍어볼래?"
                         do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
                 }.addOnFailureListener {
                     var photo_answer: String? = "무슨 사진인지 모르겠구나 좀 더 자세히 찍어볼래?"
                     do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
                 }
 
-            // 파이어베이스 DB의 공부방 하위에 질문 메세지 저장
-            firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
-                .document(message.message_id!!).set(message)
-            progressDialog.dismiss()
+                // 파이어베이스 DB의 공부방 하위에 질문 메세지 저장
+                firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
+                    .document(message.message_id!!).set(message)
+
+                progressDialog.dismiss()
+            }
         }.addOnProgressListener { taskSnapshot ->
             val progress = (100 * taskSnapshot.bytesTransferred) / taskSnapshot.totalByteCount
             progressDialog.progress = progress.toInt()
