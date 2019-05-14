@@ -384,7 +384,7 @@ class TeacherActivity : AppCompatActivity() {
             // 챗봇(다이얼로그 플로우)와 통신하는 쓰레드를 실행합니다.
             TalkAsyncTask().execute(question, message.message_id)
         }
-        else if(language_code.equals(null) or language_code.equals("null")){
+        else if(language_code.equals("und")){
             // 숫자 or 인식할 수 없는 언어
             val language_answer = "무슨 말인지 모르겠구나"
             do_answer(language_answer, "언어", message.message_id)
