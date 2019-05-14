@@ -121,14 +121,13 @@ class TeacherActivity : AppCompatActivity() {
 
                 // processing question here
                 // 언어감지, 실시간 번역
-
                 langaugeIdentifier.identifyLanguage(question!!).addOnSuccessListener {
                     language_code = it // 언어감지 결과 식별 언어의 코드 (영어는 en, 한글은 ko)
+                    sendMessage(language_code)
                 }.addOnFailureListener {
-
+                    sendMessage("")
                 }
 
-                sendMessage(language_code)
 
                 chatText.setText("")
             } else {
@@ -145,14 +144,12 @@ class TeacherActivity : AppCompatActivity() {
 
                     // processing question here
                     // 언어감지, 실시간 번역
-
                     langaugeIdentifier.identifyLanguage(question!!).addOnSuccessListener {
                         language_code = it // 언어감지 결과 식별 언어의 코드 (영어는 en, 한글은 ko)
+                        sendMessage(language_code)
                     }.addOnFailureListener {
-
+                        sendMessage("")
                     }
-
-                    sendMessage(language_code)
 
                     chatText.setText("")
                 } else {
@@ -258,8 +255,7 @@ class TeacherActivity : AppCompatActivity() {
                     holder.itemView.imagebubble.visibility = View.GONE
                     holder.itemView.right_chatbubble.visibility = View.VISIBLE
                     holder.itemView.right_chatbubble.text = message_list[position]?.message_content.toString()
-                    holder.itemView.rightTime.text =
-                        SimpleDateFormat("aa hh:mm").format(message_list[position]?.timestamp).toString()
+                    holder.itemView.rightTime.text = SimpleDateFormat("aa hh:mm").format(message_list[position]?.timestamp!!.toDate())
                     holder.itemView.left_chatbubble.visibility = View.GONE
                     holder.itemView.leftTime.visibility = View.GONE
                 } else {
@@ -267,8 +263,7 @@ class TeacherActivity : AppCompatActivity() {
                     holder.itemView.left_chatbubble.visibility = View.GONE
                     holder.itemView.right_chatbubble.visibility = View.GONE
                     holder.itemView.leftTime.visibility = View.GONE
-                    holder.itemView.rightTime.text =
-                        SimpleDateFormat("aa hh:mm").format(message_list[position]?.timestamp).toString()
+                    holder.itemView.rightTime.text = SimpleDateFormat("aa hh:mm").format(message_list[position]?.timestamp!!.toDate())
 
                     var photoUri: String?
                     photoUri = message_list[position]?.message_content as String
@@ -285,13 +280,12 @@ class TeacherActivity : AppCompatActivity() {
                 holder.itemView.rightBubbleLayout.visibility = View.GONE
                 holder.itemView.left_chatbubble.visibility = View.VISIBLE
                 holder.itemView.left_chatbubble.text = message_list[position]?.message_content.toString()
-                holder.itemView.leftTime.text =
-                    SimpleDateFormat("aa hh:mm").format(message_list[position]?.timestamp).toString()
+                holder.itemView.leftTime.text = SimpleDateFormat("aa hh:mm").format(message_list[position]?.timestamp!!.toDate())
+
                 holder.itemView.checkImg.visibility =
                     if (message_list[position]?.is_scraped!!) View.VISIBLE else View.GONE
                 holder.itemView.rightTime.visibility = View.GONE
             }
-
 
             // 다이어리에 올리는 이벤트 발생
             holder.itemView.left_chatbubble.setOnLongClickListener {
@@ -368,13 +362,9 @@ class TeacherActivity : AppCompatActivity() {
 
     // 메세지를 전송할 때 사용하는 함수
     fun sendMessage(language_code:String?) {
-
-
-
         // DB에 메세지 올리기
         val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
         val timestamp = Timestamp.now()
-
 
         // 공부방에 추가할 메세지 생성
         var message = StudyRoomDTO.Message()
@@ -396,9 +386,7 @@ class TeacherActivity : AppCompatActivity() {
             TalkAsyncTask().execute(question, message.message_id)
         }else{
             // 언어코드를 활용하여 답변 메세지 생성
-            val language_answer = "방금 질문한건" + language_code_map.get(language_code) + "이란다!"
-
-            // translate here
+            val language_answer = "방금 질문한건" + language_code_map.get(language_code) + " 란다!"
             do_answer(language_answer, "언어", message.message_id)
         }
 
@@ -422,7 +410,6 @@ class TeacherActivity : AppCompatActivity() {
         progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
         progressDialog.show()
 
-
         // 파이어베이스 스토리지에 이미지 올리기
         storageRef?.putFile(photoUri!!)?.addOnSuccessListener { taskSnapshot ->
 
@@ -440,14 +427,12 @@ class TeacherActivity : AppCompatActivity() {
             message.owner_id = auth?.currentUser?.uid.toString()
             message.question = uri!!.toString()
 
-
-
             // ML Kit Image Labeling 사용
             val imageML =
                 FirebaseVisionImage.fromBitmap(MediaStore.Images.Media.getBitmap(this.contentResolver, photoUri))
 
             val options = FirebaseVisionOnDeviceImageLabelerOptions.Builder()
-                .setConfidenceThreshold(0.7F) // 정확도 임계값 70%
+                .setConfidenceThreshold(0.6F) // 정확도 임계값 60%
                 .build()
 
             val labelDetector = FirebaseVision.getInstance().getOnDeviceImageLabeler(options)
@@ -460,8 +445,7 @@ class TeacherActivity : AppCompatActivity() {
                         photo_answer += label.text + " : " + label.confidence + "\n"
                     }
                     do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
-                }
-                .addOnSuccessListener {
+                }.addOnFailureListener {
                     var photo_answer : String? = "무슨 사진인지 모르겠구나 좀 더 자세히 찍어볼래?"
                     do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
                 }

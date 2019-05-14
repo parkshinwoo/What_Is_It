@@ -77,15 +77,14 @@ class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         holder.itemView.diaryTitle.text = diaryList[position].subject
         holder.itemView.diaryContent.text = diaryList[position].answer
-        holder.itemView.diaryDate.text =
-            SimpleDateFormat("yyyy년MM월dd일 aa hh:mm:ss").format(diaryList[position].timestamp)
+        holder.itemView.diaryDate.text = diaryList[position].timestamp.toString()
         //holder.itemView.diarySubject.text = diaryList[position].subject
         if (!diaryList[position].is_photo!!)
             holder.itemView.diaryThumb.visibility = View.GONE
         holder.itemView.diaryCardView.setOnClickListener() { view ->
             var i = Intent(context, diaryMoreViewActivity::class.java)
             i.putExtra("title", diaryList[position].subject)
-            i.putExtra("date", SimpleDateFormat("yyyy년MM월dd일 aa hh:mm:ss").format(diaryList[position].timestamp))
+            i.putExtra("date", diaryList[position].timestamp)
             i.putExtra("content", diaryList[position].answer)
             i.putExtra("is_photo", diaryList[position].is_photo)
             i.putExtra("diaryId", diaryList[position].diary_id)
