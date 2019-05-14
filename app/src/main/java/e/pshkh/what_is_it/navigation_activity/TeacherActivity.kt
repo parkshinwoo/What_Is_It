@@ -128,7 +128,6 @@ class TeacherActivity : AppCompatActivity() {
                     sendMessage("")
                 }
 
-
                 chatText.setText("")
             } else {
                 Toast.makeText(this, "질문을 입력해주세요", Toast.LENGTH_SHORT).show()
@@ -381,17 +380,23 @@ class TeacherActivity : AppCompatActivity() {
         firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
             .document(message.message_id!!).set(message)
 
-        if(language_code.equals("")){
+        if(language_code.equals("") or language_code.equals("ko")){
             // 챗봇(다이얼로그 플로우)와 통신하는 쓰레드를 실행합니다.
             TalkAsyncTask().execute(question, message.message_id)
-        }else{
-            // 언어코드를 활용하여 답변 메세지 생성
-            val language_answer = "방금 질문한건" + language_code_map.get(language_code) + " 란다!"
+        }
+        else if(language_code.equals(null) or language_code.equals("null")){
+            // 숫자 or 인식할 수 없는 언어
+            val language_answer = "무슨 말인지 모르겠구나"
             do_answer(language_answer, "언어", message.message_id)
         }
+        else{
+            // 언어코드를 활용하여 답변 메세지 생성
+            val language_answer = "방금 질문한건" + language_code_map.get(language_code) + " 란다!"
 
+            // translate here
+            do_answer(language_answer, "언어", message.message_id)
+        }
     }
-
 
     // 이미지를 파이어베이스 스토리지 및 스토어에 업로드하는 함수입니다.
     fun photoUpload() {
