@@ -31,6 +31,7 @@ import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.naturallanguage.FirebaseNaturalLanguage
 import com.google.firebase.ml.naturallanguage.languageid.FirebaseLanguageIdentificationOptions
+import com.google.firebase.ml.vision.label.FirebaseVisionOnDeviceImageLabelerOptions
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import com.theartofdev.edmodo.cropper.CropImage
@@ -170,15 +171,6 @@ class TeacherActivity : AppCompatActivity() {
 
             // crop image properly by user
             CropImage.activity().start(this)
-
-            /*
-            var photoPickerIntent = Intent(Intent.ACTION_GET_CONTENT) // ACTION_PICK은 안되는 기종이 있음.
-            photoPickerIntent.type = "image/*"
-            startActivityForResult(
-                Intent.createChooser(photoPickerIntent, "앨범을 선택해주세요."),
-                REQUEST_TAKE_ALBUM
-            ) // 1 = REQUEST_TAKE_ALBUM */*/
-
         }
     }
 
@@ -215,16 +207,6 @@ class TeacherActivity : AppCompatActivity() {
                 Toast.makeText(this, "에러 : ${result.error.message}", Toast.LENGTH_SHORT).show()
             }
         }
-
-        /*super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_TAKE_ALBUM) {
-            if (resultCode == Activity.RESULT_OK) {
-                photoUri = data?.data
-                photoUpload()
-            } else if (resultCode == Activity.RESULT_CANCELED) {
-                finish()
-            }
-        }*/
     }
 
 
@@ -464,19 +446,26 @@ class TeacherActivity : AppCompatActivity() {
             val imageML =
                 FirebaseVisionImage.fromBitmap(MediaStore.Images.Media.getBitmap(this.contentResolver, photoUri))
 
-            val labelDetector = FirebaseVision.getInstance().visionLabelDetector
-            labelDetector.detectInImage(imageML)
-                .addOnSuccessListener {labels ->
-                    var answer: String = ""
+            val options = FirebaseVisionOnDeviceImageLabelerOptions.Builder()
+                .setConfidenceThreshold(0.7F) // 정확도 임계값 70%
+                .build()
 
-                    for (label in labels) {
-                        answer +=  label.label + " : " + label.confidence + "\n"
+            val labelDetector = FirebaseVision.getInstance().getOnDeviceImageLabeler(options)
+
+            labelDetector.processImage(imageML)
+                .addOnSuccessListener {
+                    var photo_answer : String? = ""
+
+                    for (label in it){
+                        photo_answer += label.text + " : " + label.confidence + "\n"
                     }
-                    do_answer(answer, "사진", message.message_id) // 분석 결과로 답변
+                    do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
+                }
+                .addOnSuccessListener {
+                    var photo_answer : String? = "무슨 사진인지 모르겠구나 좀 더 자세히 찍어볼래?"
+                    do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
+                }
 
-                }
-                .addOnFailureListener {
-                }
             // 파이어베이스 DB의 공부방 하위에 질문 메세지 저장
             firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
                 .document(message.message_id!!).set(message)

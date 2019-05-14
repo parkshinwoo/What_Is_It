@@ -34,7 +34,7 @@ class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout
             .orderBy("timestamp")?.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
                 var item: DiaryBookDTO.Diary?
                 diaryList.clear()
-                for (snapshot in querySnapshot!!.documents!!) {
+                for (snapshot in querySnapshot!!.documents) {
                     item = snapshot.toObject(DiaryBookDTO.Diary::class.java)
                     diaryList.add(
                         DiaryBookDTO.Diary(
