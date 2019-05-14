@@ -34,22 +34,27 @@ class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout
             .orderBy("timestamp")?.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
                 var item: DiaryBookDTO.Diary?
                 diaryList.clear()
-                for (snapshot in querySnapshot!!.documents) {
-                    item = snapshot.toObject(DiaryBookDTO.Diary::class.java)
-                    diaryList.add(
-                        DiaryBookDTO.Diary(
-                            item?.diary_id,
-                            item?.timestamp,
-                            item?.date,
-                            item?.is_photo,
-                            item?.question,
-                            item?.answer,
-                            item?.subject,
-                            item?.owner_id,
-                            item?.userEmail
+                try{
+                    for (snapshot in querySnapshot!!.documents) {
+                        item = snapshot.toObject(DiaryBookDTO.Diary::class.java)
+                        diaryList.add(
+                            DiaryBookDTO.Diary(
+                                item?.diary_id,
+                                item?.timestamp,
+                                item?.date,
+                                item?.is_photo,
+                                item?.question,
+                                item?.answer,
+                                item?.subject,
+                                item?.owner_id,
+                                item?.userEmail
+                            )
                         )
-                    )
+                    }
+                }catch(KotlinNullPointerException : NullPointerException){
+                    print("일기장 널포인터 예외")
                 }
+
                 if (diaryList.isNotEmpty())
                     emptyMsgView.visibility = View.GONE
                 else

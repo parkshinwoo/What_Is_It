@@ -24,6 +24,7 @@ import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -310,7 +311,7 @@ class TeacherActivity : AppCompatActivity() {
                                 subject = input.text.toString()
 
                                 val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
-                                val timestamp = System.currentTimeMillis()
+                                val timestamp = Timestamp.now()
 
                                 var diary_book_id = owner_id
                                 var diary_id = message_list[position]?.message_id
@@ -372,8 +373,8 @@ class TeacherActivity : AppCompatActivity() {
 
         // DB에 메세지 올리기
         val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
-        // 현재 시스템 시간
-        val timestamp = System.currentTimeMillis()
+        val timestamp = Timestamp.now()
+
 
         // 공부방에 추가할 메세지 생성
         var message = StudyRoomDTO.Message()
@@ -409,8 +410,7 @@ class TeacherActivity : AppCompatActivity() {
 
         // 사진이 업로드된 날짜 및 시각을 담는 변수입니다.
         val date = SimpleDateFormat("yyyy-MM-dd-hhmmss").format(Date())
-        // 현재 시스템 시간
-        val timestamp = System.currentTimeMillis()
+        val timestamp = Timestamp.now()
         // 사진의 파일 형식은 png로 하며 파일명은 사진이 업로드된 시각으로 합니다.
         val imageFileName = "PNG_" + date + "_.png"
         // 파이어베이스 스토리지에 images라는 디렉터리를 생성하고 그 하위에 UID로 디렉터리를 생성하고 이 아래에 이미지 저장
@@ -480,7 +480,7 @@ class TeacherActivity : AppCompatActivity() {
     fun do_answer(answer: String?, subject: String?, messageId: String?) {
 
         val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
-        val timestamp = System.currentTimeMillis()
+        val timestamp = Timestamp.now()
         val answer_id = 0.toString() + timestamp.toString()
 
         val notAnsweredMessageId = messageId

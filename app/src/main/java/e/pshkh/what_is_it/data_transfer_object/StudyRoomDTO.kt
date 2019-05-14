@@ -1,10 +1,12 @@
 package e.pshkh.what_is_it.data_transfer_object
 
+import com.google.firebase.Timestamp
+
 data class StudyRoomDTO(var study_room_id: String?="", // 어린이의 uid
-                        var timestamp: Long? = 0
+                        var timestamp: Timestamp? = null
 ){
     data class Message(var message_id: String?="", // 어린이는 uid 뒤에 타임스탬프를 붙인형태, 선생님은 0 뒤에 타임스탬프를 붙인형태
-                       var timestamp: Long? = 0,
+                       var timestamp: Timestamp? = null,
                        var date: String?="", // 실제 날짜
                        var is_student: Boolean?=true, // 어린이가 보낸 메세지인지 체크
                        var is_answered: Boolean?=false, // 질문 메세지일 경우, 답변이 됬는지 체크
