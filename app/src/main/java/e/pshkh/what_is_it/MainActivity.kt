@@ -4,29 +4,26 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.support.design.widget.BottomNavigationView.OnNavigationItemSelectedListener
-import android.support.v4.app.ActivityCompat
-import android.support.v4.app.FragmentTransaction
-import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.Toolbar
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.google.android.material.bottomnavigation.BottomNavigationView.OnNavigationItemSelectedListener
 import e.pshkh.what_is_it.navigation_activity.DiaryFragment
 import e.pshkh.what_is_it.navigation_activity.TeacherActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
-
-
-
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         // 하단 네비게이션 바에 여러 아이템들이 있습니다.
         // 사용자가 네비게이션 바의 특정 아이템을 선택하면 해당하는 화면으로 이동시켜주는 기능입니다.
-
+        val appBar = supportActionBar
         when (item.itemId) {
 
             R.id.action_teacher -> {
+                appBar!!.title = "다이어리"
                 if(bottom_navigation.selectedItemId == R.id.action_teacher)
                     return false
                 // 스토리지, 카메라 접근 권한 체크를 합니다.
@@ -76,7 +73,7 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
         var mToolbar: Toolbar = this.findViewById(R.id.toolbar2)
         setSupportActionBar(mToolbar)
 
-        val transaction: FragmentTransaction = supportFragmentManager.beginTransaction();
+        val transaction: androidx.fragment.app.FragmentTransaction = supportFragmentManager.beginTransaction();
         transaction.replace(R.id.main_content, DiaryFragment()).commitAllowingStateLoss()
 
         bottom_navigation.setOnNavigationItemSelectedListener(this)

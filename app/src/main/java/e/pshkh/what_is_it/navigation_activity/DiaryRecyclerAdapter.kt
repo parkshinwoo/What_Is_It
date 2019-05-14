@@ -2,7 +2,7 @@ package e.pshkh.what_is_it.navigation_activity
 
 import android.content.Context
 import android.content.Intent
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,12 +18,19 @@ import kotlinx.android.synthetic.main.diary_card.view.*
 import java.text.SimpleDateFormat
 
 class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    androidx.recyclerview.widget.RecyclerView.Adapter<androidx.recyclerview.widget.RecyclerView.ViewHolder>() {
     private var firestore: FirebaseFirestore? = null
     private var diarySnapshot: ListenerRegistration? = null
     private var storage: FirebaseStorage? = null
     private var auth: FirebaseAuth? = null
     private val diaryList: ArrayList<DiaryBookDTO.Diary> = ArrayList()
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+
+        var view = LayoutInflater.from(parent!!.context).inflate(R.layout.diary_card, parent, false)
+
+        return DiaryViewHolder(view)
+    }
 
     init {
         storage = FirebaseStorage.getInstance()
@@ -64,17 +71,11 @@ class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout
             }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecyclerView.ViewHolder {
-        var view = LayoutInflater.from(parent!!.context).inflate(R.layout.diary_card, parent, false)
-
-        return DiaryViewHolder(view)
-    }
-
     override fun getItemCount(): Int {
         return diaryList.size
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, position: Int) {
         holder.itemView.diaryTitle.text = diaryList[position].subject
         holder.itemView.diaryContent.text = diaryList[position].answer
         holder.itemView.diaryDate.text = diaryList[position].timestamp.toString()
@@ -93,7 +94,7 @@ class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout
         }
     }
 
-    inner class DiaryViewHolder(view: View?) : RecyclerView.ViewHolder(view) {
+    inner class DiaryViewHolder(view: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(view) {
 
     }
 

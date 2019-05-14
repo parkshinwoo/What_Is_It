@@ -12,9 +12,9 @@ import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.provider.MediaStore
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -178,7 +178,7 @@ class TeacherActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        val rLayoutManager = LinearLayoutManager(this)
+        val rLayoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
         recyclerview.adapter = TeacherRecyclerViewAdapter()
         rLayoutManager.stackFromEnd = true
         recyclerview.layoutManager = rLayoutManager
@@ -207,7 +207,7 @@ class TeacherActivity : AppCompatActivity() {
     }
 
 
-    inner class TeacherRecyclerViewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    inner class TeacherRecyclerViewAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<androidx.recyclerview.widget.RecyclerView.ViewHolder>() {
 
         init {
             chatSnapshot = firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
@@ -223,26 +223,26 @@ class TeacherActivity : AppCompatActivity() {
                     }
 
                     if (message_list.isNotEmpty()) {
-                        recyclerview.adapter.notifyDataSetChanged()
-                        recyclerview.layoutManager.scrollToPosition(message_list.size - 1)
+                        recyclerview.adapter?.notifyDataSetChanged()
+                        recyclerview.layoutManager?.scrollToPosition(message_list.size - 1)
                     }
 
                 }
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): androidx.recyclerview.widget.RecyclerView.ViewHolder {
             var view =
                 LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_item_design_teacher, parent, false)
             return CustomViewHolder(view)
         }
 
-        private inner class CustomViewHolder(view: View?) : RecyclerView.ViewHolder(view)
+        private inner class CustomViewHolder(view: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(view)
 
         override fun getItemCount(): Int {
             return message_list.size
         }
 
-        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, position: Int) {
 
             holder.setIsRecyclable(false)
 
@@ -419,7 +419,7 @@ class TeacherActivity : AppCompatActivity() {
         storageRef?.putFile(photoUri!!)?.addOnSuccessListener { taskSnapshot ->
 
             // 업로드된 이미지 주소를 가져오기 파일 경로
-            var uri = taskSnapshot.downloadUrl
+            var uri = taskSnapshot.uploadSessionUri
 
             // 공부방에 추가할 메세지 생성
             var message = StudyRoomDTO.Message()
