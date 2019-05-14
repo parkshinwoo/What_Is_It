@@ -18,7 +18,7 @@ import kotlinx.android.synthetic.main.diary_card.view.*
 import java.text.SimpleDateFormat
 
 class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout) :
-    androidx.recyclerview.widget.RecyclerView.Adapter<androidx.recyclerview.widget.RecyclerView.ViewHolder>() {
+    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var firestore: FirebaseFirestore? = null
     private var diarySnapshot: ListenerRegistration? = null
     private var storage: FirebaseStorage? = null
@@ -75,17 +75,17 @@ class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout
         return diaryList.size
     }
 
-    override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         holder.itemView.diaryTitle.text = diaryList[position].subject
         holder.itemView.diaryContent.text = diaryList[position].answer
-        holder.itemView.diaryDate.text = diaryList[position].timestamp.toString()
+        holder.itemView.diaryDate.text = SimpleDateFormat("yyyy년 MM월 dd일 aa hh:mm").format(diaryList[position].timestamp!!.toDate())
         //holder.itemView.diarySubject.text = diaryList[position].subject
         if (!diaryList[position].is_photo!!)
             holder.itemView.diaryThumb.visibility = View.GONE
         holder.itemView.diaryCardView.setOnClickListener() { view ->
             var i = Intent(context, diaryMoreViewActivity::class.java)
             i.putExtra("title", diaryList[position].subject)
-            i.putExtra("date", diaryList[position].timestamp)
+            i.putExtra("date", SimpleDateFormat("yyyy년 MM월 dd일 aa hh:mm").format(diaryList[position].timestamp!!.toDate()))
             i.putExtra("content", diaryList[position].answer)
             i.putExtra("is_photo", diaryList[position].is_photo)
             i.putExtra("diaryId", diaryList[position].diary_id)
@@ -94,7 +94,7 @@ class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout
         }
     }
 
-    inner class DiaryViewHolder(view: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(view) {
+    inner class DiaryViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     }
 

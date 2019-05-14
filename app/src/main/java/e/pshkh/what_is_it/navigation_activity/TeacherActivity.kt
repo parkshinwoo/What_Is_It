@@ -24,6 +24,8 @@ import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
+import com.google.android.gms.tasks.Continuation
+import com.google.android.gms.tasks.Task
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -34,6 +36,7 @@ import com.google.firebase.ml.naturallanguage.FirebaseNaturalLanguage
 import com.google.firebase.ml.naturallanguage.languageid.FirebaseLanguageIdentificationOptions
 import com.google.firebase.ml.vision.label.FirebaseVisionOnDeviceImageLabelerOptions
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.UploadTask
 import com.google.gson.Gson
 import com.theartofdev.edmodo.cropper.CropImage
 import e.pshkh.what_is_it.R
@@ -380,6 +383,7 @@ class TeacherActivity : AppCompatActivity() {
         firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
             .document(message.message_id!!).set(message)
 
+
         if(language_code.equals("") or language_code.equals("ko")){
             // 챗봇(다이얼로그 플로우)와 통신하는 쓰레드를 실행합니다.
             TalkAsyncTask().execute(question, message.message_id)
@@ -416,57 +420,60 @@ class TeacherActivity : AppCompatActivity() {
         progressDialog.show()
 
         // 파이어베이스 스토리지에 이미지 올리기
-        storageRef?.putFile(photoUri!!)?.addOnSuccessListener { taskSnapshot ->
+        storageRef.putFile(photoUri!!).addOnSuccessListener {
 
-            // 업로드된 이미지 주소를 가져오기 파일 경로
-            var uri = taskSnapshot.uploadSessionUri
+            storageRef.downloadUrl.addOnCompleteListener {
 
-            // 공부방에 추가할 메세지 생성
-            var message = StudyRoomDTO.Message()
-            message.timestamp = timestamp
-            message.date = date
-            message.message_content = uri!!.toString() // 사진일 경우 메세지의 내용은 사진의 uri
-            message.is_photo = true
-            message.message_id = auth?.currentUser?.uid.toString() + timestamp.toString()
-            message.question_id = auth?.currentUser?.uid.toString() + timestamp.toString()
-            message.owner_id = auth?.currentUser?.uid.toString()
-            message.question = uri!!.toString()
+                var uri = it.result
 
-            // ML Kit Image Labeling 사용
-            val imageML =
-                FirebaseVisionImage.fromBitmap(MediaStore.Images.Media.getBitmap(this.contentResolver, photoUri))
+                // 공부방에 추가할 메세지 생성
+                var message = StudyRoomDTO.Message()
+                message.timestamp = timestamp
+                message.date = date
+                message.message_content = uri.toString() // 사진일 경우 메세지의 내용은 사진의 uri
+                message.is_photo = true
+                message.message_id = auth?.currentUser?.uid.toString() + timestamp.toString()
+                message.question_id = auth?.currentUser?.uid.toString() + timestamp.toString()
+                message.owner_id = auth?.currentUser?.uid.toString()
+                message.question = uri.toString()
 
-            val labelDetector = FirebaseVision.getInstance().cloudImageLabeler
+                // ML Kit Image Labeling 사용
+                val imageML =
+                    FirebaseVisionImage.fromBitmap(MediaStore.Images.Media.getBitmap(this.contentResolver, photoUri))
 
-            labelDetector.processImage(imageML)
-                .addOnSuccessListener {
-                    var photo_answer : String? = ""
-                    var resultTexts: ArrayList<String> = ArrayList()
-                    for (label in it){
-                        photo_answer += label.text + " : " + label.confidence + "\n"
-                        resultTexts.add(label.text)
-                    }
-                    if("Landmark" in resultTexts) {
-                        val landmarkDetector = FirebaseVision.getInstance().getVisionCloudLandmarkDetector()
-                        landmarkDetector.detectInImage(imageML).addOnSuccessListener { landmarks ->
-                            var landmarkMsg = "이 사진은 "
-                            for(landmark in landmarks){
-                                landmarkMsg += landmark.landmark
-                            }
-                            landmarkMsg += "을(를) 찍은 사진 같구나."
-                            do_answer(landmarkMsg, "랜드마크", message.message_id)
+                val labelDetector = FirebaseVision.getInstance().cloudImageLabeler
+
+                labelDetector.processImage(imageML)
+                    .addOnSuccessListener {
+                        var photo_answer: String? = ""
+                        var resultTexts: ArrayList<String> = ArrayList()
+                        for (label in it) {
+                            photo_answer += label.text + " : " + label.confidence + "\n"
+                            resultTexts.add(label.text)
                         }
-                    } else
+                        if ("Landmark" in resultTexts) {
+                            val landmarkDetector = FirebaseVision.getInstance().getVisionCloudLandmarkDetector()
+                            landmarkDetector.detectInImage(imageML).addOnSuccessListener { landmarks ->
+                                var landmarkMsg = "이 사진은 "
+                                for (landmark in landmarks) {
+                                    landmarkMsg += landmark.landmark
+                                }
+                                landmarkMsg += "을(를) 찍은 사진 같구나."
+                                do_answer(landmarkMsg, "랜드마크", message.message_id)
+                            }
+                        } else
+                            do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
+                    }.addOnFailureListener {
+                        var photo_answer: String? = "무슨 사진인지 모르겠구나 좀 더 자세히 찍어볼래?"
                         do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
-                }.addOnFailureListener {
-                    var photo_answer : String? = "무슨 사진인지 모르겠구나 좀 더 자세히 찍어볼래?"
-                    do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
-                }
+                    }
 
-            // 파이어베이스 DB의 공부방 하위에 질문 메세지 저장
-            firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
-                .document(message.message_id!!).set(message)
-            progressDialog.dismiss()
+                // 파이어베이스 DB의 공부방 하위에 질문 메세지 저장
+                firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
+                    .document(message.message_id!!).set(message)
+
+                progressDialog.dismiss()
+            }
         }.addOnProgressListener { taskSnapshot ->
             val progress = (100 * taskSnapshot.bytesTransferred) / taskSnapshot.totalByteCount
             progressDialog.progress = progress.toInt()
