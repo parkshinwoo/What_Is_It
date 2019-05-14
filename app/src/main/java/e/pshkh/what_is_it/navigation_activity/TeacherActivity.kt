@@ -12,27 +12,29 @@ import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.provider.MediaStore
-import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
+import com.google.firebase.FirebaseApp
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.ml.common.modeldownload.FirebaseModelDownloadConditions
+import com.google.firebase.ml.naturallanguage.FirebaseNaturalLanguage
+import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslateLanguage
+import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslateModelManager
+import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslatorOptions
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
-import com.google.firebase.ml.naturallanguage.FirebaseNaturalLanguage
-import com.google.firebase.ml.naturallanguage.languageid.FirebaseLanguageIdentificationOptions
-import com.google.firebase.ml.vision.label.FirebaseVisionOnDeviceImageLabelerOptions
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import com.theartofdev.edmodo.cropper.CropImage
@@ -42,6 +44,7 @@ import e.pshkh.what_is_it.data_transfer_object.StudyRoomDTO
 import e.pshkh.what_is_it.data_transfer_object.WeatherDTO
 import kotlinx.android.synthetic.main.activity_teacher.*
 import kotlinx.android.synthetic.main.recyclerview_item_design_teacher.view.*
+import kotlinx.coroutines.*
 import okhttp3.*
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -92,8 +95,17 @@ class TeacherActivity : AppCompatActivity() {
     var diarySnapshot: ListenerRegistration? = null
 
     val langaugeIdentifier = FirebaseNaturalLanguage.getInstance().languageIdentification
-    var language_code:String? = ""
-    val language_code_map : Map<String, String> = mapOf("en" to "영어", "es" to "스페인어", "fr" to "프랑스어", "ja" to "일본어", "ko" to "한국어", "ru" to "러시아어", "zh" to "중국어", "de" to "독일어")
+    var language_code: String? = ""
+    val language_code_map: Map<String, String> = mapOf(
+        "en" to "영어",
+        "es" to "스페인어",
+        "fr" to "프랑스어",
+        "ja" to "일본어",
+        "ko" to "한국어",
+        "ru" to "러시아어",
+        "zh" to "중국어",
+        "de" to "독일어"
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -207,7 +219,8 @@ class TeacherActivity : AppCompatActivity() {
     }
 
 
-    inner class TeacherRecyclerViewAdapter : androidx.recyclerview.widget.RecyclerView.Adapter<androidx.recyclerview.widget.RecyclerView.ViewHolder>() {
+    inner class TeacherRecyclerViewAdapter :
+        androidx.recyclerview.widget.RecyclerView.Adapter<androidx.recyclerview.widget.RecyclerView.ViewHolder>() {
 
         init {
             chatSnapshot = firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
@@ -230,7 +243,10 @@ class TeacherActivity : AppCompatActivity() {
                 }
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): androidx.recyclerview.widget.RecyclerView.ViewHolder {
+        override fun onCreateViewHolder(
+            parent: ViewGroup,
+            viewType: Int
+        ): androidx.recyclerview.widget.RecyclerView.ViewHolder {
             var view =
                 LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_item_design_teacher, parent, false)
             return CustomViewHolder(view)
@@ -254,7 +270,8 @@ class TeacherActivity : AppCompatActivity() {
                     holder.itemView.imagebubble.visibility = View.GONE
                     holder.itemView.right_chatbubble.visibility = View.VISIBLE
                     holder.itemView.right_chatbubble.text = message_list[position]?.message_content.toString()
-                    holder.itemView.rightTime.text = SimpleDateFormat("aa hh:mm").format(message_list[position]?.timestamp!!.toDate())
+                    holder.itemView.rightTime.text =
+                        SimpleDateFormat("aa hh:mm").format(message_list[position]?.timestamp!!.toDate())
                     holder.itemView.left_chatbubble.visibility = View.GONE
                     holder.itemView.leftTime.visibility = View.GONE
                 } else {
@@ -262,7 +279,8 @@ class TeacherActivity : AppCompatActivity() {
                     holder.itemView.left_chatbubble.visibility = View.GONE
                     holder.itemView.right_chatbubble.visibility = View.GONE
                     holder.itemView.leftTime.visibility = View.GONE
-                    holder.itemView.rightTime.text = SimpleDateFormat("aa hh:mm").format(message_list[position]?.timestamp!!.toDate())
+                    holder.itemView.rightTime.text =
+                        SimpleDateFormat("aa hh:mm").format(message_list[position]?.timestamp!!.toDate())
 
                     var photoUri: String?
                     photoUri = message_list[position]?.message_content as String
@@ -279,7 +297,8 @@ class TeacherActivity : AppCompatActivity() {
                 holder.itemView.rightBubbleLayout.visibility = View.GONE
                 holder.itemView.left_chatbubble.visibility = View.VISIBLE
                 holder.itemView.left_chatbubble.text = message_list[position]?.message_content.toString()
-                holder.itemView.leftTime.text = SimpleDateFormat("aa hh:mm").format(message_list[position]?.timestamp!!.toDate())
+                holder.itemView.leftTime.text =
+                    SimpleDateFormat("aa hh:mm").format(message_list[position]?.timestamp!!.toDate())
 
                 holder.itemView.checkImg.visibility =
                     if (message_list[position]?.is_scraped!!) View.VISIBLE else View.GONE
@@ -360,7 +379,7 @@ class TeacherActivity : AppCompatActivity() {
     }
 
     // 메세지를 전송할 때 사용하는 함수
-    fun sendMessage(language_code:String?) {
+    fun sendMessage(language_code: String?) {
         // DB에 메세지 올리기
         val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
         val timestamp = Timestamp.now()
@@ -380,21 +399,31 @@ class TeacherActivity : AppCompatActivity() {
         firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
             .document(message.message_id!!).set(message)
 
-        if(language_code.equals("") or language_code.equals("ko")){
+        if (language_code.equals("") or language_code.equals("ko")) {
             // 챗봇(다이얼로그 플로우)와 통신하는 쓰레드를 실행합니다.
             TalkAsyncTask().execute(question, message.message_id)
-        }
-        else if(language_code.equals("und")){
+        } else if (language_code.equals("und")) {
             // 숫자 or 인식할 수 없는 언어
             val language_answer = "무슨 말인지 모르겠구나"
             do_answer(language_answer, "언어", message.message_id)
-        }
-        else{
+        } else {
             // 언어코드를 활용하여 답변 메세지 생성
-            val language_answer = "방금 질문한건" + language_code_map.get(language_code) + " 란다!"
 
-            // translate here
-            do_answer(language_answer, "언어", message.message_id)
+            var code = FirebaseTranslateLanguage.languageForLanguageCode(language_code) ?: 0
+            val options = FirebaseTranslatorOptions.Builder().setSourceLanguage(code)
+                .setTargetLanguage(FirebaseTranslateLanguage.KO).build()
+            val translator = FirebaseNaturalLanguage.getInstance().getTranslator(options)
+            translator.downloadModelIfNeeded().addOnSuccessListener {
+                translator.translate(message.question.toString()).addOnSuccessListener { it ->
+                    var language_answer =
+                        "방금 질문한건 " + language_code_map.get(language_code) + " 란다!\n번역하면 아래와 같은 뜻이야.\n$it"
+                    do_answer(language_answer, "언어", message.message_id)
+                }.addOnFailureListener {
+                    Log.d("Translation Error", it.message)
+                }
+            }.addOnFailureListener {
+                Log.d("TranslateDownloadError", it.message)
+            }
         }
     }
 
@@ -440,26 +469,37 @@ class TeacherActivity : AppCompatActivity() {
 
             labelDetector.processImage(imageML)
                 .addOnSuccessListener {
-                    var photo_answer : String? = ""
+                    var photo_answer: String? = ""
                     var resultTexts: ArrayList<String> = ArrayList()
-                    for (label in it){
+                    for (label in it) {
                         photo_answer += label.text + " : " + label.confidence + "\n"
                         resultTexts.add(label.text)
                     }
-                    if("Landmark" in resultTexts) {
+                    if ("Landmark" in resultTexts) {
                         val landmarkDetector = FirebaseVision.getInstance().getVisionCloudLandmarkDetector()
                         landmarkDetector.detectInImage(imageML).addOnSuccessListener { landmarks ->
-                            var landmarkMsg = "이 사진은 "
-                            for(landmark in landmarks){
-                                landmarkMsg += landmark.landmark
+                            val options =
+                                FirebaseTranslatorOptions.Builder().setSourceLanguage(FirebaseTranslateLanguage.EN)
+                                    .setTargetLanguage(FirebaseTranslateLanguage.KO).build()
+                            val translator = FirebaseNaturalLanguage.getInstance().getTranslator(options)
+                            translator.downloadModelIfNeeded().addOnSuccessListener {
+                                translator.translate(message.question.toString()).addOnSuccessListener { it ->
+                                    var landmarkMsg = "이 사진은 "
+                                    landmarkMsg += landmarks[0].landmark
+                                    landmarkMsg += "을(를) 찍은 사진 같구나."
+                                    do_answer(landmarkMsg, "랜드마크", message.message_id)
+                                }.addOnFailureListener {
+                                    Log.d("Translation Error", it.message)
+                                }
+                            }.addOnFailureListener {
+                                Log.d("TranslateDownloadError", it.message)
                             }
-                            landmarkMsg += "을(를) 찍은 사진 같구나."
-                            do_answer(landmarkMsg, "랜드마크", message.message_id)
+
                         }
                     } else
                         do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
                 }.addOnFailureListener {
-                    var photo_answer : String? = "무슨 사진인지 모르겠구나 좀 더 자세히 찍어볼래?"
+                    var photo_answer: String? = "무슨 사진인지 모르겠구나 좀 더 자세히 찍어볼래?"
                     do_answer(photo_answer, "사진", message.message_id) // 분석 결과로 답변
                 }
 
@@ -472,6 +512,31 @@ class TeacherActivity : AppCompatActivity() {
             progressDialog.progress = progress.toInt()
         }
     }
+
+
+/* 비동기 언어의 지옥에 빠진 함수
+ var translatedMsg = ""
+    fun postTranslate(it: String) {
+        translatedMsg = it
+    }
+    fun translate(sourceStr: String, translateLanguage: Int?) { // 번역할 문자열과 문자열의 언어 값
+        var translateLanguage = translateLanguage // Non-nullable에 대응
+        if (translateLanguage == null)
+            translateLanguage = FirebaseTranslateLanguage.EN
+        val options = FirebaseTranslatorOptions.Builder().setSourceLanguage(translateLanguage)
+            .setTargetLanguage(FirebaseTranslateLanguage.KO).build()
+        val translator = FirebaseNaturalLanguage.getInstance().getTranslator(options)
+        translator.downloadModelIfNeeded().addOnSuccessListener {
+            translator.translate(sourceStr).addOnSuccessListener { it ->
+                postTranslate(it)
+            }.addOnFailureListener {
+                Log.d("Translation Error", it.message)
+            }
+        }.addOnFailureListener {
+            Log.d("TranslateDownloadError", it.message)
+        }
+    }
+    */
 
     // 챗봇의 답장이 이뤄지는 함수
     fun do_answer(answer: String?, subject: String?, messageId: String?) {
