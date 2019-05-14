@@ -91,6 +91,7 @@ class TeacherActivity : AppCompatActivity() {
 
     val langaugeIdentifier = FirebaseNaturalLanguage.getInstance().languageIdentification
     var language_code:String? = ""
+    val language_code_map : Map<String, String> = mapOf("en" to "영어", "es" to "스페인어", "fr" to "프랑스어", "ja" to "일본어", "ko" to "한국어", "ru" to "러시아어", "zh" to "중국어", "de" to "독일어")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -385,7 +386,7 @@ class TeacherActivity : AppCompatActivity() {
     // 메세지를 전송할 때 사용하는 함수
     fun sendMessage(language_code:String?) {
 
-        /*
+
 
         // DB에 메세지 올리기
         val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
@@ -407,14 +408,15 @@ class TeacherActivity : AppCompatActivity() {
         firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
             .document(message.message_id!!).set(message)
 
-        */
-
         if(language_code.equals("")){
             // 챗봇(다이얼로그 플로우)와 통신하는 쓰레드를 실행합니다.
-            //TalkAsyncTask().execute(question, message.message_id)
+            TalkAsyncTask().execute(question, message.message_id)
         }else{
-            // 언어코드를 활용하여 번역결과 제공하는 답변 메세지 생성
-            print(language_code)
+            // 언어코드를 활용하여 답변 메세지 생성
+            val language_answer = "방금 질문한건" + language_code_map.get(language_code) + "이란다!"
+
+            // translate here
+            do_answer(language_answer, "언어", message.message_id)
         }
 
     }
