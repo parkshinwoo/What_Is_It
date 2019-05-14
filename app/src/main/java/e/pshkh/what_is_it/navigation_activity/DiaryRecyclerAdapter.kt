@@ -78,6 +78,7 @@ class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         holder.itemView.diaryTitle.text = diaryList[position].subject
         holder.itemView.diaryContent.text = diaryList[position].answer
+        holder.itemView.diaryDate.text = SimpleDateFormat("yyyy년 MM월 dd일 aa hh:mm").format(diaryList[position].timestamp!!.toDate())
         //holder.itemView.diarySubject.text = diaryList[position].subject
         if (!diaryList[position].is_photo!!)
             holder.itemView.diaryThumb.visibility = View.GONE
