@@ -29,6 +29,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
+import com.google.firebase.ml.naturallanguage.FirebaseNaturalLanguage
+import com.google.firebase.ml.naturallanguage.languageid.FirebaseLanguageIdentificationOptions
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import com.theartofdev.edmodo.cropper.CropImage
@@ -87,6 +89,9 @@ class TeacherActivity : AppCompatActivity() {
     var chatSnapshot: ListenerRegistration? = null
     var diarySnapshot: ListenerRegistration? = null
 
+    val langaugeIdentifier = FirebaseNaturalLanguage.getInstance().languageIdentification
+    var language_code:String? = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher)
@@ -110,7 +115,18 @@ class TeacherActivity : AppCompatActivity() {
         chat.setOnClickListener {
             if (chatText.text.toString() != "") {
                 question = chatText.text.toString()
-                sendMessage()
+
+                // processing question here
+                // 언어감지, 실시간 번역
+
+                langaugeIdentifier.identifyLanguage(question!!).addOnSuccessListener {
+                    language_code = it // 언어감지 결과 식별 언어의 코드 (영어는 en, 한글은 ko)
+                }.addOnFailureListener {
+
+                }
+
+                sendMessage(language_code)
+
                 chatText.setText("")
             } else {
                 Toast.makeText(this, "질문을 입력해주세요", Toast.LENGTH_SHORT).show()
@@ -123,7 +139,18 @@ class TeacherActivity : AppCompatActivity() {
             if (actionId == EditorInfo.IME_ACTION_SEND) {
                 if (chatText.text.toString() != "") {
                     question = chatText.text.toString()
-                    sendMessage()
+
+                    // processing question here
+                    // 언어감지, 실시간 번역
+
+                    langaugeIdentifier.identifyLanguage(question!!).addOnSuccessListener {
+                        language_code = it // 언어감지 결과 식별 언어의 코드 (영어는 en, 한글은 ko)
+                    }.addOnFailureListener {
+
+                    }
+
+                    sendMessage(language_code)
+
                     chatText.setText("")
                 } else {
                     Toast.makeText(this, "질문을 입력해주세요", Toast.LENGTH_SHORT).show()
@@ -140,6 +167,7 @@ class TeacherActivity : AppCompatActivity() {
 
             q_text_flag = false
 
+            // crop image properly by user
             CropImage.activity().start(this)
 
             /*
@@ -179,12 +207,14 @@ class TeacherActivity : AppCompatActivity() {
             val result = CropImage.getActivityResult(data)
 
             if (resultCode == Activity.RESULT_OK) {
+                // if crop task done upload the photo
                 photoUri = result.uri
                 photoUpload()
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Toast.makeText(this, "에러 : ${result.error.message}", Toast.LENGTH_SHORT).show()
             }
         }
+
         /*super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_TAKE_ALBUM) {
             if (resultCode == Activity.RESULT_OK) {
@@ -195,6 +225,7 @@ class TeacherActivity : AppCompatActivity() {
             }
         }*/
     }
+
 
     inner class TeacherRecyclerViewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -318,7 +349,7 @@ class TeacherActivity : AppCompatActivity() {
                                 FirebaseFirestore.getInstance().collection("users").whereEqualTo("uid", owner_id!!)
                                     .get().addOnCompleteListener {
                                         if (it.isSuccessful) {
-                                            for (document in it.result) {
+                                            for (document in it.result!!) {
                                                 diary.userEmail = document.data["userEmail"].toString()
                                             }
                                             // 다이어리에 답변 저장
@@ -352,7 +383,9 @@ class TeacherActivity : AppCompatActivity() {
     }
 
     // 메세지를 전송할 때 사용하는 함수
-    fun sendMessage() {
+    fun sendMessage(language_code:String?) {
+
+        /*
 
         // DB에 메세지 올리기
         val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
@@ -374,8 +407,16 @@ class TeacherActivity : AppCompatActivity() {
         firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
             .document(message.message_id!!).set(message)
 
-        // 챗봇(다이얼로그 플로우)와 통신하는 쓰레드를 실행합니다.
-        TalkAsyncTask().execute(question, message.message_id)
+        */
+
+        if(language_code.equals("")){
+            // 챗봇(다이얼로그 플로우)와 통신하는 쓰레드를 실행합니다.
+            //TalkAsyncTask().execute(question, message.message_id)
+        }else{
+            // 언어코드를 활용하여 번역결과 제공하는 답변 메세지 생성
+            print(language_code)
+        }
+
     }
 
 
@@ -415,7 +456,7 @@ class TeacherActivity : AppCompatActivity() {
             message.owner_id = auth?.currentUser?.uid.toString()
             message.question = uri!!.toString()
 
-            // 파이어베이스 DB의 공부방 하위에 메세지 저장
+
 
             // ML Kit Image Labeling 사용
             val imageML =
@@ -425,22 +466,77 @@ class TeacherActivity : AppCompatActivity() {
             labelDetector.detectInImage(imageML)
                 .addOnSuccessListener {labels ->
                     var answer: String = ""
+
                     for (label in labels) {
                         answer +=  label.label + " : " + label.confidence + "\n"
                     }
-                    do_answer(answer, "사진", message.message_id)
+                    do_answer(answer, "사진", message.message_id) // 분석 결과로 답변
 
                 }
                 .addOnFailureListener {
                 }
+            // 파이어베이스 DB의 공부방 하위에 질문 메세지 저장
             firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
                 .document(message.message_id!!).set(message)
             progressDialog.dismiss()
-
         }.addOnProgressListener { taskSnapshot ->
             val progress = (100 * taskSnapshot.bytesTransferred) / taskSnapshot.totalByteCount
             progressDialog.progress = progress.toInt()
         }
+    }
+
+    // 챗봇의 답장이 이뤄지는 함수
+    fun do_answer(answer: String?, subject: String?, messageId: String?) {
+
+        val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
+        val timestamp = System.currentTimeMillis()
+        val answer_id = 0.toString() + timestamp.toString()
+
+        val notAnsweredMessageId = messageId
+
+        var map1 = mutableMapOf<String, Any>()
+        map1["_answered"] = true
+
+        var map2 = mutableMapOf<String, Any>()
+        map2["answer_id"] = answer_id
+
+        var map3 = mutableMapOf<String, Any>()
+        map3["subject"] = subject.toString()
+
+        // 공부방에 추가할 답변 메세지 생성
+        var message = StudyRoomDTO.Message()
+
+        message.subject = subject
+        message.timestamp = timestamp
+        message.date = date
+        message.message_content = answer // 선생님의 답변 내용을 담음
+        message.is_answered = true
+        message.message_id = answer_id
+        message.question_id = notAnsweredMessageId
+        message.answer_id = answer_id
+        message.owner_id = 0.toString()
+        message.is_student = false
+        message.question = question
+
+        // 파이어베이스 DB의 공부방 하위에 답변 메세지 저장
+        firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
+            .document(answer_id).set(message)
+
+        // 질문 DB 업데이트
+        firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
+            .document(notAnsweredMessageId!!).update(map1).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
+                        .document(notAnsweredMessageId).update(map2).addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!)
+                                    .collection("message")
+                                    .document(notAnsweredMessageId).update(map3).addOnCompleteListener { task ->
+                                    }
+                            }
+                        }
+                }
+            }
     }
 
     // 다이얼로그 플로우와 통신하는 쓰레드를 만들어줍니다.
@@ -586,60 +682,6 @@ class TeacherActivity : AppCompatActivity() {
                 }
             }
         })
-    }
-
-    fun do_answer(answer: String?, subject: String?, messageId: String?) {
-
-        val date = SimpleDateFormat("yyyy-MM-dd").format(Date())
-        val timestamp = System.currentTimeMillis()
-        val answer_id = 0.toString() + timestamp.toString()
-
-        val notAnsweredMessageId = messageId
-
-        var map1 = mutableMapOf<String, Any>()
-        map1["_answered"] = true
-
-        var map2 = mutableMapOf<String, Any>()
-        map2["answer_id"] = answer_id
-
-        var map3 = mutableMapOf<String, Any>()
-        map3["subject"] = subject.toString()
-
-        // 공부방에 추가할 답변 메세지 생성
-        var message = StudyRoomDTO.Message()
-
-        message.subject = subject
-        message.timestamp = timestamp
-        message.date = date
-        message.message_content = answer // 선생님의 답변 내용을 담음
-        message.is_answered = true
-        message.message_id = answer_id
-        message.question_id = notAnsweredMessageId
-        message.answer_id = answer_id
-        message.owner_id = 0.toString()
-        message.is_student = false
-        message.question = question
-
-        // 파이어베이스 DB의 공부방 하위에 답변 메세지 저장
-        firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
-            .document(answer_id).set(message)
-
-        // 질문 DB 업데이트
-        firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
-            .document(notAnsweredMessageId!!).update(map1).addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
-                        .document(notAnsweredMessageId).update(map2).addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!)
-                                    .collection("message")
-                                    .document(notAnsweredMessageId).update(map3).addOnCompleteListener { task ->
-
-                                    }
-                            }
-                        }
-                }
-            }
     }
 }
 

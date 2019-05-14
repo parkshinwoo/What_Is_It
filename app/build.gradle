@@ -48,8 +48,12 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore:15.0.0'
     implementation 'com.google.firebase:firebase-storage:15.0.0'
     implementation 'com.google.firebase:firebase-database:15.0.0'
+
+    // 파이어베이스 ML Kit
     implementation 'com.google.firebase:firebase-ml-vision:15.0.0'
     implementation 'com.google.firebase:firebase-ml-vision-image-label-model:15.0.0'
+    implementation 'com.google.firebase:firebase-ml-natural-language:18.1.1'
+    implementation 'com.google.firebase:firebase-ml-natural-language-language-id-model:18.0.2'
     
     // 다이얼로그 플로우
     implementation 'ai.api:libai:1.6.12'
