@@ -61,6 +61,32 @@
             android:text="TextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/diaryMoreContent"/>"
+            android:id="@+id/diaryMoreContent"/>
+
+    <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="질문 내용"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="#000"
+            android:textSize="18dp"
+            android:layout_marginTop="10dp"/>
+
+    <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:background="@color/colorDivision"
+            android:id="@+id/view2"/>
+
+    <TextView
+            android:text="TextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/diaryMoreQeustion"/>"
     android:id="@+id/diaryMoreContent"/>
 </LinearLayout>

@@ -14,12 +14,13 @@
             android:background="?attr/colorPrimary"
             android:theme="?attr/actionBarTheme"
             android:minHeight="?attr/actionBarSize"
-            android:id="@+id/toolbar2"/>
+            android:id="@+id/toolbar2"
+            />
 
     <FrameLayout
             android:id="@+id/main_content"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="1">
 
     </FrameLayout>
@@ -31,7 +32,7 @@
             android:layout_height="wrap_content"
             app:itemBackground="@color/colorPrimary"
             app:itemIconTint="@drawable/bottom_navigation_selector"
-            app:itemTextColor="@color/colorWhite"
+            app:itemTextColor="@drawable/bottom_navigation_selector"
             app:menu="@menu/bottom_navigation"
             >
 
