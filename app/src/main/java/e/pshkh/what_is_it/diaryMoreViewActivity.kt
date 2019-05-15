@@ -28,10 +28,10 @@ class diaryMoreViewActivity : AppCompatActivity() {
         actionBar?.title = "더보기"
         actionBar?.setDisplayHomeAsUpEnabled(true)
         actionBar?.setDisplayShowHomeEnabled(true)
-
         diaryMoreTitle.text = intent.getCharSequenceExtra("title")
         diaryMoreDate.text = intent.getCharSequenceExtra("date")
         diaryMoreContent.text = intent.getCharSequenceExtra("content")
+        diaryMoreQeustion.text = intent.getCharSequenceExtra("question")
         diaryId = intent.getCharSequenceExtra("diaryId").toString()
         ownerId = auth.currentUser!!.uid
         // if(intent.getBooleanExtra("is_photo", false))

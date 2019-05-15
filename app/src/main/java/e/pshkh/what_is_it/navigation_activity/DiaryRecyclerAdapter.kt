@@ -89,6 +89,7 @@ class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout
             i.putExtra("content", diaryList[position].answer)
             i.putExtra("is_photo", diaryList[position].is_photo)
             i.putExtra("diaryId", diaryList[position].diary_id)
+            i.putExtra("question", diaryList[position].question.toString())
             i.putExtra("ownerId", diaryList[position].owner_id)
             context?.startActivity(i)
         }
