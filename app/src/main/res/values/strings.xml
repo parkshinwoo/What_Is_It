@@ -15,9 +15,7 @@
 
     <!-- Bottom Navigation View -->
     <string name="diary">다이어리</string>
-    <string name="emotion">오늘 내 기분은?</string>
     <string name="teacher">선생님</string>
-
 
     <!-- Teacher -->
     <string name="hint_teacher">선생님께 물어보세요!</string>

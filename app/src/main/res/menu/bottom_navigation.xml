@@ -14,12 +14,4 @@
             android:icon="@drawable/ic_teacher"
             android:title="@string/teacher"
     ></item>
-
-    <item
-            app:showAsAction="ifRoom"
-            android:id="@+id/action_recognize_emotion"
-            android:icon="@drawable/ic_face"
-            android:title="@string/emotion"
-    ></item>
-
 </menu>

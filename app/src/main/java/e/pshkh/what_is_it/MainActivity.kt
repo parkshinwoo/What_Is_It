@@ -45,23 +45,6 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
                 supportFragmentManager.beginTransaction().replace(R.id.main_content, fragment).commit()
                 return true
             }
-
-
-            R.id.action_recognize_emotion -> {
-
-                /*
-                // 스토리지, 카메라 접근 권한 체크를 합니다.
-                if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) ==
-                    PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
-                    PackageManager.PERMISSION_GRANTED) {
-                    startActivity(Intent(this, EmotionActivity::class.java))
-                } else {
-                    Toast.makeText(this, "EXTERNAL STORAGE 읽기 권한이 없습니다.", Toast.LENGTH_LONG).show()
-                }
-                */
-
-            }
-
         }
         return false
     }

@@ -32,6 +32,7 @@ import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslateLanguag
 import com.google.firebase.ml.naturallanguage.translate.FirebaseTranslatorOptions
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
+import com.google.firebase.ml.vision.text.FirebaseVisionCloudTextRecognizerOptions
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import com.theartofdev.edmodo.cropper.CropImage
@@ -103,6 +104,12 @@ class TeacherActivity : AppCompatActivity() {
         "de" to "독일어"
     )
 
+    val options = FirebaseVisionCloudTextRecognizerOptions.Builder()
+        .setLanguageHints(Arrays.asList("en", "es", "fr", "ja", "ru", "zh", "de"))
+        .build()
+
+    val textRecognizer = FirebaseVision.getInstance().getCloudTextRecognizer()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_teacher)
@@ -115,6 +122,10 @@ class TeacherActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
 
+
+        /*
+        v1 will be deprecated.. soon
+         */
         // 다이얼로그 플로우 v1 API "개발자" 키 값을 넣어줍니다.
         // v2 API는 안드로이드를 아직 지원 안합니다.
         // 이 앱을 배포할 시엔 "클라이언트" 키 값을 넣으면 됩니다.
@@ -487,9 +498,38 @@ class TeacherActivity : AppCompatActivity() {
                                 }.addOnFailureListener {
                                     Log.d("TranslateDownloadError", it.message)
                                 }
-
                             }
-                        } else {
+                        }
+                        else if("Text" in resultTexts || "Font" in resultTexts || "Document" in resultTexts || "Writing" in resultTexts || "Novel" in resultTexts) {
+                            textRecognizer.processImage(imageML)
+                                .addOnSuccessListener {
+                                    var ocrMsg:String? = "이 사진 속 글의 뜻은 이것이란다\n\n"
+                                    var blockLangugeCode:String? = "EN"
+                                    var targetText:String? = ""
+                                    for (block in it.textBlocks){
+                                        targetText += block.text + " "
+                                        blockLangugeCode = block.recognizedLanguages.toString()
+                                    }
+                                    var code = FirebaseTranslateLanguage.languageForLanguageCode(blockLangugeCode) ?: 0
+                                    val options = FirebaseTranslatorOptions.Builder().setSourceLanguage(code)
+                                        .setTargetLanguage(FirebaseTranslateLanguage.KO).build()
+                                    val translator = FirebaseNaturalLanguage.getInstance().getTranslator(options)
+                                    translator.downloadModelIfNeeded().addOnSuccessListener {
+                                        translator.translate(targetText!!).addOnSuccessListener { it ->
+                                            ocrMsg += it
+                                            do_answer(ocrMsg, "언어", message.message_id)
+                                        }.addOnFailureListener {
+                                            Log.d("Translation Error", it.message)
+                                        }
+                                    }.addOnFailureListener {
+                                        Log.d("TranslateDownloadError", it.message)
+                                    }
+                                }
+                                .addOnFailureListener {
+                                    Log.d("Text Recognition Error", it.message)
+                                }
+                        }
+                        else {
                             val options =
                                 FirebaseTranslatorOptions.Builder().setSourceLanguage(FirebaseTranslateLanguage.EN)
                                     .setTargetLanguage(FirebaseTranslateLanguage.KO).build()
