@@ -12,6 +12,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView.OnNavigationItemSelectedListener
 import e.pshkh.what_is_it.navigation_activity.DiaryFragment
+import e.pshkh.what_is_it.navigation_activity.EmotionFragment
 import e.pshkh.what_is_it.navigation_activity.TeacherActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -19,11 +20,10 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         // 하단 네비게이션 바에 여러 아이템들이 있습니다.
         // 사용자가 네비게이션 바의 특정 아이템을 선택하면 해당하는 화면으로 이동시켜주는 기능입니다.
-        val appBar = supportActionBar
         when (item.itemId) {
 
             R.id.action_teacher -> {
-                appBar!!.title = "다이어리"
+               // supportActionBar!!.title = "다이어리"
                 if(bottom_navigation.selectedItemId == R.id.action_teacher)
                     return false
                 // 스토리지, 카메라 접근 권한 체크를 합니다.
@@ -48,17 +48,22 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
 
 
             R.id.action_recognize_emotion -> {
+                if(bottom_navigation.selectedItemId == R.id.action_recognize_emotion)
+                    return false
 
-                /*
+
+               // supportActionBar!!.title = "내기분"
+
                 // 스토리지, 카메라 접근 권한 체크를 합니다.
                 if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) ==
                     PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
                     PackageManager.PERMISSION_GRANTED) {
-                    startActivity(Intent(this, EmotionActivity::class.java))
+                    val fragment = EmotionFragment()
+                    supportFragmentManager.beginTransaction().replace(R.id.main_content, fragment).commit()
+                    return true
                 } else {
                     Toast.makeText(this, "EXTERNAL STORAGE 읽기 권한이 없습니다.", Toast.LENGTH_LONG).show()
                 }
-                */
 
             }
 
@@ -72,6 +77,7 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
 
         var mToolbar: Toolbar = this.findViewById(R.id.toolbar2)
         setSupportActionBar(mToolbar)
+        supportActionBar!!.title = "다이어리"
 
         val transaction: androidx.fragment.app.FragmentTransaction = supportFragmentManager.beginTransaction();
         transaction.replace(R.id.main_content, DiaryFragment()).commitAllowingStateLoss()
