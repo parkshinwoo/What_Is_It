@@ -1,22 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/coordinatorLayout"
         >
 
-    <com.otaliastudios.cameraview.CameraView
-            android:id="@+id/emotion_camera_view"
+    <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:cameraFacing="front"
-            android:keepScreenOn="true"
-            android:visibility="visible"
-            >
+            android:layout_height="match_parent">
 
-    </com.otaliastudios.cameraview.CameraView>
+        <com.otaliastudios.cameraview.CameraView
+                android:id="@+id/emotion_camera_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cameraFacing="front"
+                android:keepScreenOn="true"
+                >
+
+        </com.otaliastudios.cameraview.CameraView>
+    </LinearLayout>
 
     <ImageView
             android:id="@+id/emotion_camera_image_view"
@@ -25,4 +31,4 @@
             android:scaleType="centerCrop"
             />
 
-</FrameLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

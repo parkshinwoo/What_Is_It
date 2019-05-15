@@ -1,17 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
             app:showAsAction="ifRoom"
             android:id="@+id/action_diary"
             android:icon="@drawable/ic_diary"
             android:title="@string/diary"
-    ></item>
+            ></item>
 
     <item
             app:showAsAction="ifRoom"
             android:id="@+id/action_teacher"
             android:icon="@drawable/ic_teacher"
             android:title="@string/teacher"
-    ></item>
+            ></item>
+    <item
+            app:showAsAction="ifRoom"
+            android:id="@+id/action_recognize_emotion"
+            android:icon="@drawable/ic_face"
+            android:title="@string/emotion"
+            ></item>
 </menu>

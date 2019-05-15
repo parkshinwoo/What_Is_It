@@ -12,6 +12,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView.OnNavigationItemSelectedListener
 import e.pshkh.what_is_it.navigation_activity.DiaryFragment
+import e.pshkh.what_is_it.navigation_activity.EmotionFragment
 import e.pshkh.what_is_it.navigation_activity.TeacherActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -24,12 +25,16 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
 
             R.id.action_teacher -> {
                 appBar!!.title = "다이어리"
-                if(bottom_navigation.selectedItemId == R.id.action_teacher)
+                if (bottom_navigation.selectedItemId == R.id.action_teacher)
                     return false
                 // 스토리지, 카메라 접근 권한 체크를 합니다.
-                if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) ==
-                    PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
-                    PackageManager.PERMISSION_GRANTED) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                    PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.CAMERA
+                    ) ==
+                    PackageManager.PERMISSION_GRANTED
+                ) {
                     startActivity(Intent(this, TeacherActivity::class.java))
                 } else {
                     Toast.makeText(this, "EXTERNAL STORAGE 읽기 권한이 없습니다.", Toast.LENGTH_LONG).show()
@@ -39,12 +44,40 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
             }
 
             R.id.action_diary -> {
-                if(bottom_navigation.selectedItemId == R.id.action_diary)
+                if (bottom_navigation.selectedItemId == R.id.action_diary)
                     return false
                 val fragment = DiaryFragment()
                 supportFragmentManager.beginTransaction().replace(R.id.main_content, fragment).commit()
                 return true
             }
+
+
+            R.id.action_recognize_emotion -> {
+
+                if (bottom_navigation.selectedItemId == R.id.action_recognize_emotion)
+                    return false
+
+
+                // supportActionBar!!.title = "내기분"
+
+                // 스토리지, 카메라 접근 권한 체크를 합니다.
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                    PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
+                        this,
+                        Manifest.permission.CAMERA
+                    ) ==
+                    PackageManager.PERMISSION_GRANTED
+                ) {
+                    val fragment = EmotionFragment()
+                    supportFragmentManager.beginTransaction().replace(R.id.main_content, fragment).commit()
+                    return true
+                } else {
+                    Toast.makeText(this, "EXTERNAL STORAGE 읽기 권한이 없습니다.", Toast.LENGTH_LONG).show()
+                }
+
+
+            }
+
         }
         return false
     }
@@ -62,9 +95,13 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
         bottom_navigation.setOnNavigationItemSelectedListener(this)
 
         // 시작할때마다 홈에서 시작하게끔 하단 네비게이션의 현재 선택된 아이템을 다이어리로 지정합니다.
-       //  bottom_navigation.selectedItemId = R.id.action_diary
+        //  bottom_navigation.selectedItemId = R.id.action_diary
 
         // 디바이스 사진첩, 카메라에 접근할 권한을 줍니다.
-        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA),1 )
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA),
+            1
+        )
     }
 }

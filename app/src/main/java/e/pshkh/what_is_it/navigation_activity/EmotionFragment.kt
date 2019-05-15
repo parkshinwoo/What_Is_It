@@ -2,6 +2,7 @@ package e.pshkh.what_is_it.navigation_activity
 
 import android.graphics.*
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -53,17 +54,28 @@ class EmotionFragment : Fragment() {
                 val bitmap = Bitmap.createBitmap(height, width, Bitmap.Config.ARGB_8888) // 카메라 영상
                 val canvas = Canvas(bitmap) // 카메라 위에 도형 그리기 위함
                 val boxPaint = Paint()
-                boxPaint.color = Color.RED
+                boxPaint.color = Color.GREEN
                 boxPaint.style = Paint.Style.STROKE
                 boxPaint.strokeWidth = 4F
                 val textPaint = Paint()
                 textPaint.isAntiAlias = true
-                textPaint.color = Color.RED
+                textPaint.color = Color.GREEN
                 textPaint.textSize = 40.0f
                 for (face in it) {
+                    Log.d("Emotion", face.smilingProbability.toString())
+                    var emotion = "행복"
+                    if (face.smilingProbability < 0.20f) {
+                        emotion = "화남"
+                        textPaint.color = Color.RED
+                        boxPaint.color = Color.RED
+                    } else if (face.smilingProbability < 0.80f) {
+                        emotion = "보통"
+                        textPaint.color = Color.YELLOW
+                        boxPaint.color = Color.YELLOW
+                    }
                     canvas.drawRect(face.boundingBox, boxPaint)
                     canvas.drawText(
-                        "행복: ${face.smilingProbability}",
+                        emotion,
                         face.boundingBox.right.toFloat(),
                         face.boundingBox.bottom.toFloat(),
                         textPaint
