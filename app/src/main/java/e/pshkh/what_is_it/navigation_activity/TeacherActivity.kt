@@ -40,6 +40,7 @@ import e.pshkh.what_is_it.R
 import e.pshkh.what_is_it.data_transfer_object.DiaryBookDTO
 import e.pshkh.what_is_it.data_transfer_object.StudyRoomDTO
 import e.pshkh.what_is_it.data_transfer_object.WeatherDTO
+import e.pshkh.what_is_it.data_transfer_object.naverEnDTO
 import kotlinx.android.synthetic.main.activity_teacher.*
 import kotlinx.android.synthetic.main.recyclerview_item_design_teacher.view.*
 import okhttp3.*
@@ -489,12 +490,10 @@ class TeacherActivity : AppCompatActivity() {
                                 val translator = FirebaseNaturalLanguage.getInstance().getTranslator(options)
                                 translator.downloadModelIfNeeded().addOnSuccessListener {
                                     translator.translate(landmarks[0].landmark).addOnSuccessListener { it ->
-                                        var landmarkMsg = "이 사진은 ${it}을(를) 찍은 사진 같구나."
-                                        do_answer(landmarkMsg, "랜드마크", message.message_id)
+                                        getInfoNaver(it, message.message_id)
                                     }.addOnFailureListener {
                                         Log.d("Translation Error", it.message)
-                                        var landmarkMsg = "이 사진은 ${landmarks[0].landmark}을(를) 찍은 사진 같구나."
-                                        do_answer(landmarkMsg, "랜드마크", message.message_id)
+                                        getInfoNaver(landmarks[0].landmark, message.message_id)
                                     }
                                 }.addOnFailureListener {
                                     Log.d("TranslateDownloadError", it.message)
@@ -536,11 +535,10 @@ class TeacherActivity : AppCompatActivity() {
                             translator.downloadModelIfNeeded().addOnSuccessListener {
                                 translator.translate(resultTexts[0]).addOnSuccessListener { it ->
                                     var photoMsg = "이 사진은 ${it}을(를) 찍은 사진 같구나."
-                                    do_answer(photoMsg, "사진", message.message_id)
+                                    getInfoNaver(it, message.message_id)
                                 }.addOnFailureListener {
                                     Log.d("Translation Error", it.message)
-                                    var photoMsg = "이 사진은 ${resultTexts[0]}을(를) 찍은 사진 같구나."
-                                    do_answer(photoMsg, "사진", message.message_id)
+                                    getInfoNaver(resultTexts[0], message.message_id)
                                 }
                             }.addOnFailureListener {
                                 Log.d("TranslateDownloadError", it.message)
@@ -562,6 +560,26 @@ class TeacherActivity : AppCompatActivity() {
         }
     }
 
+    fun getInfoNaver(query: String, messageId: String?){
+        var enUrl =
+            "https://openapi.naver.com/v1/search/encyc.json?query=${query}"
+        var request = Request.Builder().url(enUrl).addHeader("X-Naver-Client-Id", "9TSnvZkgqp7ktSrVrPUy").addHeader("X-Naver-Client-Secret", "C6zEcYNP4i").build()
+        var infoMsg = "이 사진은 ${query}을(를) 찍은 사진 같구나.\n\n"
+        OkHttpClient().newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call?, e: IOException?) {
+            }
+
+            override fun onResponse(call: Call?, response: Response?) {
+                var result = response?.body()?.string()
+                // json 값을 weatherDTO 오브젝트로 만듭니다.
+                var enDTO = Gson().fromJson(result, naverEnDTO::class.java)
+                infoMsg += enDTO.items!![0].description!!.replace(Regex("(<([^>]+)>)"), "")
+                infoMsg += "\n\n더 자세한 설명을 보고싶으면 아래 링크를 참고하렴.\n${enDTO.items!![0].link}"
+                do_answer(infoMsg, "사진", messageId)
+            }
+
+        })
+    }
 
 /* 비동기 언어의 지옥에 빠진 함수
  var translatedMsg = ""
@@ -628,12 +646,14 @@ class TeacherActivity : AppCompatActivity() {
         firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
             .document(notAnsweredMessageId!!).update(map1).addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
+                    firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!)
+                        .collection("message")
                         .document(notAnsweredMessageId).update(map2).addOnCompleteListener { task ->
                             if (task.isSuccessful) {
                                 firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!)
                                     .collection("message")
-                                    .document(notAnsweredMessageId).update(map3).addOnCompleteListener { task ->
+                                    .document(notAnsweredMessageId).update(map3)
+                                    .addOnCompleteListener { task ->
                                     }
                             }
                         }

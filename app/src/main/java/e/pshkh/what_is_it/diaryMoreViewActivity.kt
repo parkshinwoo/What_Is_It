@@ -1,21 +1,17 @@
 package e.pshkh.what_is_it
 
+import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
-import com.bumptech.glide.request.RequestOptions
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
 import kotlinx.android.synthetic.main.activity_diary_more_view.*
-import kotlinx.android.synthetic.main.diary_card.view.*
+
 
 class diaryMoreViewActivity : AppCompatActivity() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -59,8 +55,14 @@ class diaryMoreViewActivity : AppCompatActivity() {
                 Toast.makeText(this@diaryMoreViewActivity, "삭제되었습니다.", Toast.LENGTH_SHORT).show()
             }
             R.id.action_diary_share -> {
-
+                val shareIntent = Intent(Intent.ACTION_SEND)
+                shareIntent.type = "text/plain"
+                shareIntent.putExtra(Intent.EXTRA_SUBJECT, diaryMoreTitle.text)
+                shareIntent.putExtra(Intent.EXTRA_TEXT, diaryMoreContent.text)
+                val chooser = Intent.createChooser(shareIntent, "친구에게 공유하기")
+                startActivity(chooser)
             }
+
         }
         return super.onOptionsItemSelected(item)
     }

@@ -57,6 +57,7 @@
             android:layout_height="wrap_content"
             android:background="@drawable/leftbubble"
             android:text="@string/chat_bubble"
+            android:autoLink="web"
             android:maxWidth="240dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
