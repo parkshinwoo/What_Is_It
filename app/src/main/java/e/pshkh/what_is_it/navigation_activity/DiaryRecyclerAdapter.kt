@@ -15,7 +15,7 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.storage.FirebaseStorage
 import e.pshkh.what_is_it.R
 import e.pshkh.what_is_it.data_transfer_object.DiaryBookDTO
-import e.pshkh.what_is_it.diaryMoreViewActivity
+import e.pshkh.what_is_it.DiaryMoreViewActivity
 import kotlinx.android.synthetic.main.diary_card.view.*
 import java.text.SimpleDateFormat
 
@@ -93,7 +93,7 @@ class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout
             holder.itemView.diaryThumb.visibility = View.GONE
         }
         holder.itemView.diaryCardView.setOnClickListener() { view ->
-            var i = Intent(context, diaryMoreViewActivity::class.java)
+            var i = Intent(context, DiaryMoreViewActivity::class.java)
             i.putExtra("title", diaryList[position].subject)
             i.putExtra(
                 "date",

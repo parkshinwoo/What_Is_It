@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
                     Toast.makeText(this, "EXTERNAL STORAGE 읽기 권한이 없습니다.", Toast.LENGTH_LONG).show()
                 }
 
-                return true
+                return false
             }
 
             R.id.action_diary -> {

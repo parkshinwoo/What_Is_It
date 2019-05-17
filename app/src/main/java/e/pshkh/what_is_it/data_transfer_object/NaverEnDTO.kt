@@ -1,6 +1,6 @@
 package e.pshkh.what_is_it.data_transfer_object
 
-data class naverEnDTO(
+data class NaverEnDTO(
     var description: String? = "",
     var total: Int? = 0,
     var items: MutableList<item>? = null

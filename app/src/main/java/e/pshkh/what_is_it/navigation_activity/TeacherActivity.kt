@@ -36,11 +36,12 @@ import com.google.firebase.ml.vision.text.FirebaseVisionCloudTextRecognizerOptio
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
 import com.theartofdev.edmodo.cropper.CropImage
+import e.pshkh.what_is_it.PhotoViewActivity
 import e.pshkh.what_is_it.R
 import e.pshkh.what_is_it.data_transfer_object.DiaryBookDTO
 import e.pshkh.what_is_it.data_transfer_object.StudyRoomDTO
 import e.pshkh.what_is_it.data_transfer_object.WeatherDTO
-import e.pshkh.what_is_it.data_transfer_object.naverEnDTO
+import e.pshkh.what_is_it.data_transfer_object.NaverEnDTO
 import kotlinx.android.synthetic.main.activity_teacher.*
 import kotlinx.android.synthetic.main.recyclerview_item_design_teacher.view.*
 import okhttp3.*
@@ -299,6 +300,12 @@ class TeacherActivity : AppCompatActivity() {
                     requestOptions = requestOptions.transform(RoundedCorners(16))
                     Glide.with(holder.itemView.context).load(photoUri).apply(RequestOptions().centerCrop())
                         .apply(requestOptions).into(holder.itemView.imagebubble)
+
+                    holder.itemView.imagebubble.setOnClickListener {
+                        val photoViewIntent = Intent(this@TeacherActivity, PhotoViewActivity::class.java)
+                        photoViewIntent.putExtra("photoUri", photoUri)
+                        startActivity(photoViewIntent)
+                    }
                 }
             } else {
                 // 챗봇이 내게 보낸 메세지일 경우
@@ -572,7 +579,7 @@ class TeacherActivity : AppCompatActivity() {
             override fun onResponse(call: Call?, response: Response?) {
                 var result = response?.body()?.string()
                 // json 값을 weatherDTO 오브젝트로 만듭니다.
-                var enDTO = Gson().fromJson(result, naverEnDTO::class.java)
+                var enDTO = Gson().fromJson(result, NaverEnDTO::class.java)
                 infoMsg += enDTO.items!![0].description!!.replace(Regex("(<([^>]+)>)"), "")
                 infoMsg += "\n\n더 자세한 설명을 보고싶으면 아래 링크를 참고하렴.\n${enDTO.items!![0].link}"
                 do_answer(infoMsg, "사진", messageId)

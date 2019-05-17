@@ -13,7 +13,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.activity_diary_more_view.*
 
 
-class diaryMoreViewActivity : AppCompatActivity() {
+class DiaryMoreViewActivity : AppCompatActivity() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val diaryDB: FirebaseFirestore = FirebaseFirestore.getInstance()
     private var diaryId: String = ""
@@ -32,8 +32,13 @@ class diaryMoreViewActivity : AppCompatActivity() {
         diaryMoreContent.text = intent.getCharSequenceExtra("content")
         diaryId = intent.getCharSequenceExtra("diaryId").toString()
 
-        if(intent.getBooleanExtra("is_photo", false)) {
+        if (intent.getBooleanExtra("is_photo", false)) {
             Glide.with(this).load(intent.getCharSequenceExtra("question")).into(this.diaryMoreImage)
+            this.diaryMoreImage.setOnClickListener {
+                val photoViewIntent = Intent(this, PhotoViewActivity::class.java)
+                photoViewIntent.putExtra("photoUri", intent.getCharSequenceExtra("question"))
+                startActivity(photoViewIntent)
+            }
         } else {
             diaryMoreQeustion.text = intent.getCharSequenceExtra("question")
         }
@@ -47,12 +52,13 @@ class diaryMoreViewActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when(item!!.itemId){
+        when (item!!.itemId) {
             R.id.action_diary_delete -> {
                 diaryDB.collection("DiaryBook").document(ownerId).collection("diary").document(diaryId).delete()
-                diaryDB.collection("StudyRoom").document(ownerId).collection("message").document(diaryId).update("_scraped", false)
+                diaryDB.collection("StudyRoom").document(ownerId).collection("message").document(diaryId)
+                    .update("_scraped", false)
                 onBackPressed()
-                Toast.makeText(this@diaryMoreViewActivity, "삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@DiaryMoreViewActivity, "삭제되었습니다.", Toast.LENGTH_SHORT).show()
             }
             R.id.action_diary_share -> {
                 val shareIntent = Intent(Intent.ACTION_SEND)
