@@ -2,11 +2,13 @@ package e.pshkh.what_is_it.navigation_activity
 
 import android.content.Context
 import android.content.Intent
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -41,7 +43,7 @@ class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout
             .orderBy("timestamp")?.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
                 var item: DiaryBookDTO.Diary?
                 diaryList.clear()
-                try{
+                try {
                     for (snapshot in querySnapshot!!.documents) {
                         item = snapshot.toObject(DiaryBookDTO.Diary::class.java)
                         diaryList.add(
@@ -58,7 +60,7 @@ class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout
                             )
                         )
                     }
-                }catch(KotlinNullPointerException : NullPointerException){
+                } catch (KotlinNullPointerException: NullPointerException) {
                     print("일기장 널포인터 예외")
                 }
 
@@ -78,14 +80,25 @@ class DiaryRecyclerAdapter(val context: Context?, val emptyMsgView: LinearLayout
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         holder.itemView.diaryTitle.text = diaryList[position].subject
         holder.itemView.diaryContent.text = diaryList[position].answer
-        holder.itemView.diaryDate.text = SimpleDateFormat("yyyy년 MM월 dd일 aa hh:mm").format(diaryList[position].timestamp!!.toDate())
+        holder.itemView.diaryDate.text =
+            SimpleDateFormat("yyyy년 MM월 dd일 aa hh:mm").format(diaryList[position].timestamp!!.toDate())
+
         //holder.itemView.diarySubject.text = diaryList[position].subject
-        if (!diaryList[position].is_photo!!)
+        if (diaryList[position].is_photo == true) {
+            holder.itemView.diaryContent.maxLines = 5
+            holder.itemView.diaryThumb.visibility = View.VISIBLE
+            Glide.with(holder.itemView.context).load(diaryList[position].question).apply(RequestOptions().centerCrop())
+                .into(holder.itemView.diaryThumb)
+        } else {
             holder.itemView.diaryThumb.visibility = View.GONE
+        }
         holder.itemView.diaryCardView.setOnClickListener() { view ->
             var i = Intent(context, diaryMoreViewActivity::class.java)
             i.putExtra("title", diaryList[position].subject)
-            i.putExtra("date", SimpleDateFormat("yyyy년 MM월 dd일 aa hh:mm").format(diaryList[position].timestamp!!.toDate()))
+            i.putExtra(
+                "date",
+                SimpleDateFormat("yyyy년 MM월 dd일 aa hh:mm").format(diaryList[position].timestamp!!.toDate())
+            )
             i.putExtra("content", diaryList[position].answer)
             i.putExtra("is_photo", diaryList[position].is_photo)
             i.putExtra("diaryId", diaryList[position].diary_id)

@@ -70,7 +70,7 @@
             android:layout_height="17dp"
             app:srcCompat="@drawable/ic_diary"
             android:id="@+id/checkImg"
-
+            android:scaleType="centerCrop"
             android:visibility="gone"
             app:layout_constraintStart_toEndOf="@+id/leftTime"
             android:layout_marginStart="4dp"

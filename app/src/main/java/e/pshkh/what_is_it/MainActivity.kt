@@ -20,11 +20,9 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         // 하단 네비게이션 바에 여러 아이템들이 있습니다.
         // 사용자가 네비게이션 바의 특정 아이템을 선택하면 해당하는 화면으로 이동시켜주는 기능입니다.
-        val appBar = supportActionBar
         when (item.itemId) {
 
             R.id.action_teacher -> {
-                appBar!!.title = "다이어리"
                 if (bottom_navigation.selectedItemId == R.id.action_teacher)
                     return false
                 // 스토리지, 카메라 접근 권한 체크를 합니다.
@@ -46,6 +44,8 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
             R.id.action_diary -> {
                 if (bottom_navigation.selectedItemId == R.id.action_diary)
                     return false
+
+                supportActionBar!!.title = "다이어리"
                 val fragment = DiaryFragment()
                 supportFragmentManager.beginTransaction().replace(R.id.main_content, fragment).commit()
                 return true
@@ -56,10 +56,7 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
 
                 if (bottom_navigation.selectedItemId == R.id.action_recognize_emotion)
                     return false
-
-
-                // supportActionBar!!.title = "내기분"
-
+                supportActionBar!!.title = "내기분"
                 // 스토리지, 카메라 접근 권한 체크를 합니다.
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) ==
                     PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
@@ -88,10 +85,9 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
 
         var mToolbar: Toolbar = this.findViewById(R.id.toolbar2)
         setSupportActionBar(mToolbar)
-
+        supportActionBar!!.title = "다이어리"
         val transaction: androidx.fragment.app.FragmentTransaction = supportFragmentManager.beginTransaction();
         transaction.replace(R.id.main_content, DiaryFragment()).commitAllowingStateLoss()
-
         bottom_navigation.setOnNavigationItemSelectedListener(this)
 
         // 시작할때마다 홈에서 시작하게끔 하단 네비게이션의 현재 선택된 아이템을 다이어리로 지정합니다.

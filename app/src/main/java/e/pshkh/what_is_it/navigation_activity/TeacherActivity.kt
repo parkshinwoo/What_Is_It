@@ -335,9 +335,10 @@ class TeacherActivity : AppCompatActivity() {
                                 var diary_book_id = owner_id
                                 var diary_id = message_list[position]?.message_id
 
-                                var is_photo: Boolean? = true
-                                if (message_list[position]?.is_photo == false) {
-                                    is_photo = false
+                                var is_photo: Boolean? = false
+                                if (message_list[position - 1]?.is_photo != false) {
+                                    is_photo = true
+                                    question = message_list[position - 1]?.message_content
                                 }
 
                                 diary.diary_id = diary_id
@@ -499,14 +500,13 @@ class TeacherActivity : AppCompatActivity() {
                                     Log.d("TranslateDownloadError", it.message)
                                 }
                             }
-                        }
-                        else if("Text" in resultTexts || "Font" in resultTexts || "Document" in resultTexts || "Writing" in resultTexts || "Novel" in resultTexts) {
+                        } else if ("Text" in resultTexts || "Font" in resultTexts || "Document" in resultTexts || "Writing" in resultTexts || "Novel" in resultTexts) {
                             textRecognizer.processImage(imageML)
                                 .addOnSuccessListener {
-                                    var ocrMsg:String? = "이 사진 속 글의 뜻은 이것이란다\n\n"
-                                    var blockLangugeCode:String? = "EN"
-                                    var targetText:String? = ""
-                                    for (block in it.textBlocks){
+                                    var ocrMsg: String? = "이 사진 속 글의 뜻은 이것이란다\n\n"
+                                    var blockLangugeCode: String? = "EN"
+                                    var targetText: String? = ""
+                                    for (block in it.textBlocks) {
                                         targetText += block.text + " "
                                         blockLangugeCode = block.recognizedLanguages.toString()
                                     }
@@ -528,8 +528,7 @@ class TeacherActivity : AppCompatActivity() {
                                 .addOnFailureListener {
                                     Log.d("Text Recognition Error", it.message)
                                 }
-                        }
-                        else {
+                        } else {
                             val options =
                                 FirebaseTranslatorOptions.Builder().setSourceLanguage(FirebaseTranslateLanguage.EN)
                                     .setTargetLanguage(FirebaseTranslateLanguage.KO).build()

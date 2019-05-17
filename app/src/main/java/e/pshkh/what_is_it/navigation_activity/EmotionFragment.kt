@@ -1,6 +1,9 @@
 package e.pshkh.what_is_it.navigation_activity
 
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -11,6 +14,7 @@ import androidx.fragment.app.Fragment
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
+import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetector
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions
 import com.otaliastudios.cameraview.CameraLogger
 import com.otaliastudios.cameraview.CameraView
@@ -20,6 +24,8 @@ import kotlinx.android.synthetic.main.fragment_emotion.view.*
 class EmotionFragment : Fragment() {
     private lateinit var cameraView: CameraView
     private lateinit var camearaImageView: ImageView
+    private lateinit var faceDetector:FirebaseVisionFaceDetector
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -30,7 +36,7 @@ class EmotionFragment : Fragment() {
         camearaImageView = emotionView.emotion_camera_image_view
         cameraView.scaleX = -1f // 전면카메라 좌우반전
         CameraLogger.setLogLevel(CameraLogger.LEVEL_VERBOSE)
-        cameraView.setLifecycleOwner(this@EmotionFragment)
+        cameraView.setLifecycleOwner(this)
         cameraView.addFrameProcessor { frame ->
             val width = frame.size.width
             val height = frame.size.height
@@ -47,7 +53,7 @@ class EmotionFragment : Fragment() {
                 .setClassificationMode(FirebaseVisionFaceDetectorOptions.ALL_CLASSIFICATIONS)
                 .build()
 
-            val faceDetector = FirebaseVision.getInstance().getVisionFaceDetector(options)
+            faceDetector = FirebaseVision.getInstance().getVisionFaceDetector(options)
             faceDetector.detectInImage(firebaseVisionImage).addOnSuccessListener {
                 camearaImageView.setImageBitmap(null)
 
