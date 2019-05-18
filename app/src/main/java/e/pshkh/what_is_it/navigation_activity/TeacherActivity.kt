@@ -44,6 +44,7 @@ import e.pshkh.what_is_it.data_transfer_object.WeatherDTO
 import e.pshkh.what_is_it.data_transfer_object.NaverEnDTO
 import kotlinx.android.synthetic.main.activity_teacher.*
 import kotlinx.android.synthetic.main.recyclerview_item_design_teacher.view.*
+import net.objecthunter.exp4j.ExpressionBuilder
 import okhttp3.*
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -419,9 +420,22 @@ class TeacherActivity : AppCompatActivity() {
             // 챗봇(다이얼로그 플로우)와 통신하는 쓰레드를 실행합니다.
             TalkAsyncTask().execute(question, message.message_id)
         } else if (language_code.equals("und")) {
-            // 숫자 or 인식할 수 없는 언어
-            val language_answer = "무슨 말인지 모르겠구나"
-            do_answer(language_answer, "언어", message.message_id)
+            // 숫자
+            var language_answer = "무슨 말인지 모르겠구나"
+            if(question!!.contains("*") || question!!.contains("+") || question!!.contains("-") || question!!.contains("/")){
+                try {
+                    val expression = ExpressionBuilder(question).build()
+                    language_answer =  "연산 결과는 " + expression.evaluate().toString() + " 이란다."
+                } catch (ex: ArithmeticException){
+                    language_answer = "무슨 말인지 모르겠구나. 식을 정확히 써줄래?"
+                } catch (ex: IllegalArgumentException){
+                    language_answer = "무슨 말인지 모르겠구나. 식을 정확히 써줄래?"
+                }
+                do_answer(language_answer, "수학", message.message_id)
+            }else{
+                //인식할 수 없는 언어
+                do_answer(language_answer, "언어", message.message_id)
+            }
         } else {
             // 언어코드를 활용하여 답변 메세지 생성
 

@@ -57,6 +57,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-ml-natural-language-translate:19.0.0'
     implementation 'com.google.firebase:firebase-ml-natural-language-translate-model:19.0.0'
 
+    //계산 라이브러리
+    implementation 'net.objecthunter:exp4j:0.4.8'
+
     // 다이얼로그 플로우
     implementation 'ai.api:libai:1.6.12'
 
