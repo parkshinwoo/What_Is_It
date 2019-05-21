@@ -104,14 +104,10 @@ class TeacherActivity : AppCompatActivity() {
         "ko" to "한국어",
         "ru" to "러시아어",
         "zh" to "중국어",
-        "de" to "독일어"
+        "de" to "독일어",
+        "pt" to "포르투갈어"
     )
 
-    val options = FirebaseVisionCloudTextRecognizerOptions.Builder()
-        .setLanguageHints(Arrays.asList("en", "es", "fr", "ja", "ru", "zh", "de"))
-        .build()
-
-    val textRecognizer = FirebaseVision.getInstance().getCloudTextRecognizer()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -505,22 +501,32 @@ class TeacherActivity : AppCompatActivity() {
                         if ("Landmark" in resultTexts) {
                             val landmarkDetector = FirebaseVision.getInstance().getVisionCloudLandmarkDetector()
                             landmarkDetector.detectInImage(imageML).addOnSuccessListener { landmarks ->
-                                val options =
-                                    FirebaseTranslatorOptions.Builder().setSourceLanguage(FirebaseTranslateLanguage.EN)
-                                        .setTargetLanguage(FirebaseTranslateLanguage.KO).build()
-                                val translator = FirebaseNaturalLanguage.getInstance().getTranslator(options)
-                                translator.downloadModelIfNeeded().addOnSuccessListener {
-                                    translator.translate(landmarks[0].landmark).addOnSuccessListener { it ->
-                                        getInfoNaver(it, message.message_id)
+                                langaugeIdentifier.identifyLanguage(landmarks[0].landmark!!).addOnSuccessListener {
+                                    var langCode = FirebaseTranslateLanguage.languageForLanguageCode(it) ?: 0
+                                    val options =
+                                        FirebaseTranslatorOptions.Builder().setSourceLanguage(langCode)
+                                            .setTargetLanguage(FirebaseTranslateLanguage.KO).build()
+                                    val translator = FirebaseNaturalLanguage.getInstance().getTranslator(options)
+                                    translator.downloadModelIfNeeded().addOnSuccessListener {
+                                        translator.translate(landmarks[0].landmark).addOnSuccessListener { it ->
+                                            getInfoNaver(it, message.message_id)
+                                        }.addOnFailureListener {
+                                            Log.d("Translation Error", it.message)
+                                            getInfoNaver(landmarks[0].landmark, message.message_id)
+                                        }
                                     }.addOnFailureListener {
-                                        Log.d("Translation Error", it.message)
-                                        getInfoNaver(landmarks[0].landmark, message.message_id)
+                                        Log.d("TranslateDownloadError", it.message)
                                     }
-                                }.addOnFailureListener {
-                                    Log.d("TranslateDownloadError", it.message)
                                 }
+
                             }
                         } else if ("Text" in resultTexts || "Font" in resultTexts || "Document" in resultTexts || "Writing" in resultTexts || "Novel" in resultTexts) {
+
+                            val options = FirebaseVisionCloudTextRecognizerOptions.Builder()
+                                .setLanguageHints(Arrays.asList("en", "es", "ja", "ru", "zh", "de", "pt"))
+                                .build()
+
+                            val textRecognizer = FirebaseVision.getInstance().getCloudTextRecognizer(options)
                             textRecognizer.processImage(imageML)
                                 .addOnSuccessListener {
                                     var ocrMsg: String? = "이 사진 속 글의 뜻은 이것이란다\n\n"
@@ -528,22 +534,27 @@ class TeacherActivity : AppCompatActivity() {
                                     var targetText: String? = ""
                                     for (block in it.textBlocks) {
                                         targetText += block.text + " "
-                                        blockLangugeCode = block.recognizedLanguages.toString()
                                     }
-                                    var code = FirebaseTranslateLanguage.languageForLanguageCode(blockLangugeCode) ?: 0
-                                    val options = FirebaseTranslatorOptions.Builder().setSourceLanguage(code)
-                                        .setTargetLanguage(FirebaseTranslateLanguage.KO).build()
-                                    val translator = FirebaseNaturalLanguage.getInstance().getTranslator(options)
-                                    translator.downloadModelIfNeeded().addOnSuccessListener {
-                                        translator.translate(targetText!!).addOnSuccessListener { it ->
-                                            ocrMsg += it
-                                            do_answer(ocrMsg, "언어", message.message_id)
+
+                                    langaugeIdentifier.identifyLanguage(targetText!!).addOnSuccessListener {
+                                        var code = FirebaseTranslateLanguage.languageForLanguageCode(it) ?: 0
+                                        val options = FirebaseTranslatorOptions.Builder().setSourceLanguage(code)
+                                            .setTargetLanguage(FirebaseTranslateLanguage.KO).build()
+                                        val translator = FirebaseNaturalLanguage.getInstance().getTranslator(options)
+                                        translator.downloadModelIfNeeded().addOnSuccessListener {
+                                            translator.translate(targetText!!).addOnSuccessListener { it ->
+                                                ocrMsg += it
+                                                do_answer(ocrMsg, "언어", message.message_id)
+                                            }.addOnFailureListener {
+                                                Log.d("Translation Error", it.message)
+                                            }
                                         }.addOnFailureListener {
-                                            Log.d("Translation Error", it.message)
+                                            Log.d("TranslateDownloadError", it.message)
                                         }
                                     }.addOnFailureListener {
-                                        Log.d("TranslateDownloadError", it.message)
                                     }
+
+
                                 }
                                 .addOnFailureListener {
                                     Log.d("Text Recognition Error", it.message)
@@ -590,12 +601,16 @@ class TeacherActivity : AppCompatActivity() {
             override fun onFailure(call: Call?, e: IOException?) {
             }
 
-            override fun onResponse(call: Call?, response: Response?) {
+            override fun onResponse(call: Call?, response: Response) {
                 var result = response?.body()?.string()
                 // json 값을 weatherDTO 오브젝트로 만듭니다.
                 var enDTO = Gson().fromJson(result, NaverEnDTO::class.java)
-                infoMsg += enDTO.items!![0].description!!.replace(Regex("(<([^>]+)>)"), "")
-                infoMsg += "\n\n더 자세한 설명을 보고싶으면 아래 링크를 참고하렴.\n${enDTO.items!![0].link}"
+                if(response.isSuccessful && enDTO.items!!.size != 0){
+                    infoMsg += enDTO.items!![0].description?.replace(Regex("(<([^>]+)>)"), "")
+                    infoMsg += "\n\n더 자세한 설명을 보고싶으면 아래 링크를 참고하렴.\n${enDTO.items!![0].link}"
+                } else {
+                    infoMsg += "사진에 대해 자세한 정보를 찾는데에는 실패했어."
+                }
                 do_answer(infoMsg, "사진", messageId)
             }
 
