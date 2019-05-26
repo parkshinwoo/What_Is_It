@@ -35,6 +35,7 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.text.FirebaseVisionCloudTextRecognizerOptions
 import com.google.firebase.storage.FirebaseStorage
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.theartofdev.edmodo.cropper.CropImage
 import e.pshkh.what_is_it.PhotoViewActivity
 import e.pshkh.what_is_it.R
@@ -412,43 +413,60 @@ class TeacherActivity : AppCompatActivity() {
         firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
             .document(message.message_id!!).set(message)
 
-        if (language_code.equals("") or language_code.equals("ko")) {
-            // 챗봇(다이얼로그 플로우)와 통신하는 쓰레드를 실행합니다.
-            TalkAsyncTask().execute(question, message.message_id)
-        } else if (language_code.equals("und")) {
-            // 숫자
-            var language_answer = "무슨 말인지 모르겠구나"
-            if(question!!.contains("*") || question!!.contains("+") || question!!.contains("-") || question!!.contains("/")){
-                try {
-                    val expression = ExpressionBuilder(question).build()
-                    language_answer =  "연산 결과는 " + expression.evaluate().toString() + " 이란다."
-                } catch (ex: ArithmeticException){
-                    language_answer = "무슨 말인지 모르겠구나. 식을 정확히 써줄래?"
-                } catch (ex: IllegalArgumentException){
-                    language_answer = "무슨 말인지 모르겠구나. 식을 정확히 써줄래?"
-                }
-                do_answer(language_answer, "수학", message.message_id)
-            }else{
-                //인식할 수 없는 언어
-                do_answer(language_answer, "언어", message.message_id)
+        if(question!!.contains("달러") || question!!.contains("유로") || question!!.contains("엔") || question!!.contains("위안")){
+            if(question!!.contains("달러")){
+                val amount = question!!.split("달러")
+                convert_currency_rate(amount[0].toInt(), "USDKRW", message.message_id)
+            }else if(question!!.contains("유로")){
+                val amount = question!!.split("유로")
+                convert_currency_rate(amount[0].toInt(), "EURKRW", message.message_id)
+            }else if(question!!.contains("엔")){
+                val amount = question!!.split("엔")
+                convert_currency_rate(amount[0].toInt(), "JPYKRW", message.message_id)
+            }else if(question!!.contains("위안")){
+                val amount = question!!.split("위안")
+                convert_currency_rate(amount[0].toInt(), "CNYKRW", message.message_id)
             }
-        } else {
-            // 언어코드를 활용하여 답변 메세지 생성
-
-            var code = FirebaseTranslateLanguage.languageForLanguageCode(language_code) ?: 0
-            val options = FirebaseTranslatorOptions.Builder().setSourceLanguage(code)
-                .setTargetLanguage(FirebaseTranslateLanguage.KO).build()
-            val translator = FirebaseNaturalLanguage.getInstance().getTranslator(options)
-            translator.downloadModelIfNeeded().addOnSuccessListener {
-                translator.translate(message.question.toString()).addOnSuccessListener { it ->
-                    var language_answer =
-                        "방금 질문한건 " + language_code_map.get(language_code) + " 란다!\n번역하면 아래와 같은 뜻이야.\n$it"
+        }
+        else{
+            if (language_code.equals("") or language_code.equals("ko")) {
+                // 챗봇(다이얼로그 플로우)와 통신하는 쓰레드를 실행합니다.
+                TalkAsyncTask().execute(question, message.message_id)
+            } else if (language_code.equals("und")) {
+                // 숫자
+                var language_answer = "무슨 말인지 모르겠구나"
+                if(question!!.contains("*") || question!!.contains("+") || question!!.contains("-") || question!!.contains("/")){
+                    try {
+                        val expression = ExpressionBuilder(question).build()
+                        language_answer =  "연산 결과는 " + expression.evaluate().toString() + " 이란다."
+                    } catch (ex: ArithmeticException){
+                        language_answer = "무슨 말인지 모르겠구나. 식을 정확히 써줄래?"
+                    } catch (ex: IllegalArgumentException){
+                        language_answer = "무슨 말인지 모르겠구나. 식을 정확히 써줄래?"
+                    }
+                    do_answer(language_answer, "수학", message.message_id)
+                }else{
+                    //인식할 수 없는 언어
                     do_answer(language_answer, "언어", message.message_id)
-                }.addOnFailureListener {
-                    Log.d("Translation Error", it.message)
                 }
-            }.addOnFailureListener {
-                Log.d("TranslateDownloadError", it.message)
+            } else {
+                // 언어코드를 활용하여 답변 메세지 생성
+
+                var code = FirebaseTranslateLanguage.languageForLanguageCode(language_code) ?: 0
+                val options = FirebaseTranslatorOptions.Builder().setSourceLanguage(code)
+                    .setTargetLanguage(FirebaseTranslateLanguage.KO).build()
+                val translator = FirebaseNaturalLanguage.getInstance().getTranslator(options)
+                translator.downloadModelIfNeeded().addOnSuccessListener {
+                    translator.translate(message.question.toString()).addOnSuccessListener { it ->
+                        var language_answer =
+                            "방금 질문한건 " + language_code_map.get(language_code) + " 란다!\n번역하면 아래와 같은 뜻이야.\n$it"
+                        do_answer(language_answer, "언어", message.message_id)
+                    }.addOnFailureListener {
+                        Log.d("Translation Error", it.message)
+                    }
+                }.addOnFailureListener {
+                    Log.d("TranslateDownloadError", it.message)
+                }
             }
         }
     }
@@ -603,7 +621,7 @@ class TeacherActivity : AppCompatActivity() {
 
             override fun onResponse(call: Call?, response: Response) {
                 var result = response?.body()?.string()
-                // json 값을 weatherDTO 오브젝트로 만듭니다.
+                // json 값을 NaverEnDTO 오브젝트로 만듭니다.
                 var enDTO = Gson().fromJson(result, NaverEnDTO::class.java)
                 if(response.isSuccessful && enDTO.items!!.size != 0){
                     infoMsg += enDTO.items!![0].description?.replace(Regex("(<([^>]+)>)"), "")
@@ -615,6 +633,31 @@ class TeacherActivity : AppCompatActivity() {
             }
 
         })
+    }
+
+    fun convert_currency_rate(amount : Int, code: String?, messageId: String?){
+        var rate_url = "https://earthquake.kr:23490/query/${code}"
+        var request = Request.Builder().url(rate_url).build()
+        var rateMsg = ""
+
+        OkHttpClient().newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call?, e: IOException?) {
+
+            }
+            override fun onResponse(call: Call?, response: Response) {
+                if(response.isSuccessful){
+                    var result = response.body()!!.string().split(",")
+
+                    var cash = (result[6].toDouble()*amount)
+
+                    rateMsg = cash.toString() + '원'
+                } else {
+                    rateMsg = "이 화폐의 환율은 나도 모른단다. 달러, 유로, 엔, 위안 넷중 한가지로 물어봐주렴"
+                }
+                do_answer(rateMsg, "경제", messageId)
+            }
+        })
+
     }
 
 /* 비동기 언어의 지옥에 빠진 함수
