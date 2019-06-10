@@ -11,7 +11,8 @@
     <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:id="@+id/linearLayout">
 
         <com.otaliastudios.cameraview.CameraView
                 android:id="@+id/emotion_camera_view"
@@ -30,5 +31,17 @@
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
             />
+
+    <ImageButton
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            app:srcCompat="@drawable/ic_camera"
+            android:id="@+id/captureBtn"
+            app:layout_anchorGravity="bottom|center"
+            android:layout_marginBottom="10dp"
+            android:scaleType="fitXY"
+            android:background="#00FFFFFF"
+            app:layout_anchor="@+id/linearLayout"
+            android:padding="10dp"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

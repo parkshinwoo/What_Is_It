@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity(), OnNavigationItemSelectedListener {
                     return false
                 supportActionBar!!.title = "내기분"
                 // 스토리지, 카메라 접근 권한 체크를 합니다.
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
                     PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(
                         this,
                         Manifest.permission.CAMERA

@@ -413,42 +413,38 @@ class TeacherActivity : AppCompatActivity() {
         firestore!!.collection("StudyRoom").document(auth?.currentUser?.uid!!).collection("message")
             .document(message.message_id!!).set(message)
 
-        if(question!!.contains("달러") || question!!.contains("유로") || question!!.contains("엔") || question!!.contains("위안")){
-            if(question!!.contains("달러")){
+        val calReg = Regex("[0-9]+[*\\/\\-+][0-9]+")
+        var language_answer = "무슨 말인지 모르겠구나"
+        if (question!!.contains("달러") || question!!.contains("유로") || question!!.contains("엔") || question!!.contains("위안")) {
+            if (question!!.contains("달러")) {
                 val amount = question!!.split("달러")
                 convert_currency_rate(amount[0].toInt(), "USDKRW", message.message_id)
-            }else if(question!!.contains("유로")){
+            } else if (question!!.contains("유로")) {
                 val amount = question!!.split("유로")
                 convert_currency_rate(amount[0].toInt(), "EURKRW", message.message_id)
-            }else if(question!!.contains("엔")){
+            } else if (question!!.contains("엔")) {
                 val amount = question!!.split("엔")
                 convert_currency_rate(amount[0].toInt(), "JPYKRW", message.message_id)
-            }else if(question!!.contains("위안")){
+            } else if (question!!.contains("위안")) {
                 val amount = question!!.split("위안")
                 convert_currency_rate(amount[0].toInt(), "CNYKRW", message.message_id)
             }
-        }
-        else{
+        } else if (calReg.containsMatchIn(question!!)) {
+            try {
+                val expression = ExpressionBuilder(calReg.find(question!!)!!.value).build()
+                language_answer = "연산 결과는 " + expression.evaluate().toString() + " 이란다."
+            } catch (ex: ArithmeticException) {
+                language_answer = "무슨 말인지 모르겠구나. 식을 정확히 써줄래?"
+            } catch (ex: IllegalArgumentException) {
+                language_answer = "무슨 말인지 모르겠구나. 식을 정확히 써줄래?"
+            }
+            do_answer(language_answer, "수학", message.message_id)
+        } else {
             if (language_code.equals("") or language_code.equals("ko")) {
                 // 챗봇(다이얼로그 플로우)와 통신하는 쓰레드를 실행합니다.
                 TalkAsyncTask().execute(question, message.message_id)
             } else if (language_code.equals("und")) {
                 // 숫자
-                var language_answer = "무슨 말인지 모르겠구나"
-                if(question!!.contains("*") || question!!.contains("+") || question!!.contains("-") || question!!.contains("/")){
-                    try {
-                        val expression = ExpressionBuilder(question).build()
-                        language_answer =  "연산 결과는 " + expression.evaluate().toString() + " 이란다."
-                    } catch (ex: ArithmeticException){
-                        language_answer = "무슨 말인지 모르겠구나. 식을 정확히 써줄래?"
-                    } catch (ex: IllegalArgumentException){
-                        language_answer = "무슨 말인지 모르겠구나. 식을 정확히 써줄래?"
-                    }
-                    do_answer(language_answer, "수학", message.message_id)
-                }else{
-                    //인식할 수 없는 언어
-                    do_answer(language_answer, "언어", message.message_id)
-                }
             } else {
                 // 언어코드를 활용하여 답변 메세지 생성
 
@@ -610,10 +606,11 @@ class TeacherActivity : AppCompatActivity() {
         }
     }
 
-    fun getInfoNaver(query: String, messageId: String?){
+    fun getInfoNaver(query: String, messageId: String?) {
         var enUrl =
             "https://openapi.naver.com/v1/search/encyc.json?query=${query}"
-        var request = Request.Builder().url(enUrl).addHeader("X-Naver-Client-Id", "9TSnvZkgqp7ktSrVrPUy").addHeader("X-Naver-Client-Secret", "C6zEcYNP4i").build()
+        var request = Request.Builder().url(enUrl).addHeader("X-Naver-Client-Id", "9TSnvZkgqp7ktSrVrPUy")
+            .addHeader("X-Naver-Client-Secret", "C6zEcYNP4i").build()
         var infoMsg = "이 사진은 ${query}을(를) 찍은 사진 같구나.\n\n"
         OkHttpClient().newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call?, e: IOException?) {
@@ -623,7 +620,7 @@ class TeacherActivity : AppCompatActivity() {
                 var result = response?.body()?.string()
                 // json 값을 NaverEnDTO 오브젝트로 만듭니다.
                 var enDTO = Gson().fromJson(result, NaverEnDTO::class.java)
-                if(response.isSuccessful && enDTO.items!!.size != 0){
+                if (response.isSuccessful && enDTO.items!!.size != 0) {
                     infoMsg += enDTO.items!![0].description?.replace(Regex("(<([^>]+)>)"), "")
                     infoMsg += "\n\n더 자세한 설명을 보고싶으면 아래 링크를 참고하렴.\n${enDTO.items!![0].link}"
                 } else {
@@ -635,7 +632,7 @@ class TeacherActivity : AppCompatActivity() {
         })
     }
 
-    fun convert_currency_rate(amount : Int, code: String?, messageId: String?){
+    fun convert_currency_rate(amount: Int, code: String?, messageId: String?) {
         var rate_url = "https://earthquake.kr:23490/query/${code}"
         var request = Request.Builder().url(rate_url).build()
         var rateMsg = ""
@@ -644,13 +641,14 @@ class TeacherActivity : AppCompatActivity() {
             override fun onFailure(call: Call?, e: IOException?) {
 
             }
+
             override fun onResponse(call: Call?, response: Response) {
-                if(response.isSuccessful){
+                if (response.isSuccessful) {
                     var result = response.body()!!.string().split(",")
 
-                    var cash = (result[6].toDouble()*amount)
+                    var cash = (result[6].toDouble() * amount)
 
-                    rateMsg = cash.toString() + '원'
+                    rateMsg = cash.toString() + "원 이란다."
                 } else {
                     rateMsg = "이 화폐의 환율은 나도 모른단다. 달러, 유로, 엔, 위안 넷중 한가지로 물어봐주렴"
                 }
