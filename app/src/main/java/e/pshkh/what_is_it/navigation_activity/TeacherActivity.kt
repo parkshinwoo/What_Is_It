@@ -106,7 +106,8 @@ class TeacherActivity : AppCompatActivity() {
         "ru" to "러시아어",
         "zh" to "중국어",
         "de" to "독일어",
-        "pt" to "포르투갈어"
+        "pt" to "포르투갈어",
+        "sl" to "슬로베니아어"
     )
 
 
@@ -543,18 +544,21 @@ class TeacherActivity : AppCompatActivity() {
                             val textRecognizer = FirebaseVision.getInstance().getCloudTextRecognizer(options)
                             textRecognizer.processImage(imageML)
                                 .addOnSuccessListener {
-                                    var ocrMsg: String? = "이 사진 속 글의 뜻은 이것이란다\n\n"
+                                    var ocrMsg = ""
                                     var blockLangugeCode: String? = "EN"
                                     var targetText: String? = ""
                                     for (block in it.textBlocks) {
                                         targetText += block.text + " "
                                     }
 
-                                    langaugeIdentifier.identifyLanguage(targetText!!).addOnSuccessListener {
+                                    langaugeIdentifier.identifyLanguage(targetText!!).addOnSuccessListener {it ->
                                         var code = FirebaseTranslateLanguage.languageForLanguageCode(it) ?: 0
                                         val options = FirebaseTranslatorOptions.Builder().setSourceLanguage(code)
                                             .setTargetLanguage(FirebaseTranslateLanguage.KO).build()
                                         val translator = FirebaseNaturalLanguage.getInstance().getTranslator(options)
+
+                                        ocrMsg += "이 사진 속 글은 " + language_code_map.get(it) + "로 쓰여있구나.\n이 글의 뜻은 이것이란다\n\n"
+
                                         translator.downloadModelIfNeeded().addOnSuccessListener {
                                             translator.translate(targetText!!).addOnSuccessListener { it ->
                                                 ocrMsg += it
